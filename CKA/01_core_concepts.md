@@ -106,3 +106,45 @@ kubectl exec etcd-master -n kube-system -- sh -c "ETCDCTL_API=3 etcdctl get / --
 ```
 
 ## Kube-API Server
+
+It is the primary management component in kubernetes. When you run `kubectl` command it is in fact reaching to kube-api server. The kube-api server first authenticates the requests ans validates it, then retrieves data from ETCD cluster and response back with the information. The API can also be invoked directly.
+
+For instance when you create a pod, in this case the api server creates a pod object without assigning it to a node and place the information to ETCD server then updates the user that pod has been created. 
+
+The scheduler continuously monitors the api server and realise there's a new pod with no node assigned, the scheduler identifies the right node to place the new pod on. And communicates that back to the api server, then api server updates the information in the etcd cluster. The api server then passes the information to the kubelet in worker node. The kubelet creates the pod in the node and instructs the container runtime engine to deploy the application image. Once done the kubelet updates the status back to the api server and api server updates the data in the etcd cluster. A similar pattern is followed every time a change is requested, the kube-api server is at the center of all tasks that need to be performed in the kubernetes cluster. 
+
+![Kube API Server](images/CKA-kube-api-server.drawio.png)
+
+Kube-API server is responsible for following tasks:
+1. Authenticating requests
+1. Validating requests
+1. Retrieving data in the ETCD data store (the only component that interacts directly with ETCD)
+1. Updating data in the ETCD data store
+1. Scheduler: Uses api server to perform update in the cluster in their respective areas
+1. Kubelet: Uses api server to perform update in the cluster in their respective areas
+
+
+> If we set up cluster with kubeadm none of these maters, but if we set it up from scratch then the kube-api server need to be installed with its binary in kubernetes release page.
+
+To view kube-api server  options in an existing cluster, with kubeadm, the kube-api server is deployed as a pod in kube-system namespace on the master node 
+```bash
+kubectl get pods -n kube-system
+```
+
+You can see the option in the kube-apiserver.yaml manifest file
+```bash
+cat /etc/kubernetes/manifests/kube-apiserver.yaml
+```
+In a none kubeadm set up you can view the options located in
+```bash
+cat /etc/systemd/system/kube-apiserver.service
+```
+You can also see the running process and respective options by searching kube-apiserver in the runnijhng processes
+```bash
+ps -aux | grep kube-apiserver
+```
+
+## Kube Controller Manager
+
+It manages various controllers in kubernetes, 
+
