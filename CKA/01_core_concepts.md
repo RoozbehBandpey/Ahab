@@ -139,12 +139,39 @@ In a none kubeadm set up you can view the options located in
 ```bash
 cat /etc/systemd/system/kube-apiserver.service
 ```
-You can also see the running process and respective options by searching kube-apiserver in the runnijhng processes
+You can also see the running process and respective options by searching kube-apiserver in the running processes
 ```bash
 ps -aux | grep kube-apiserver
 ```
 
 ## Kube Controller Manager
 
-It manages various controllers in kubernetes, 
+It manages various controllers in kubernetes, in the kubernetes terms a controller is a process that continuously monitors state of various components within the system and works towards bringing the whole system towards the desired functioning state. 
+
+Node controller: is responsible of monitoring state of nodes and take necessary actions to keep the nodes running, it does that through the kube-api server. The node controller takes the status of nodes every 5 seconds for health monitoring. If it stops receiving heartbeats from a node, the node is marked as unreachable after waiting for 40 seconds. The it gives the node 5 minutes to come back up, if it doesn't it removes the pod on that node and provisions them on the healthy one if the pods are part of a replicaset. 
+
+Replication controller: It is responsible for monitoring state of replicasets and ensuring that the desired number of pods are available at all time within the set. if a pod dies, it creates another one 
+
+
+There are many more controllers in kubernetes such as endpoint, deployment, jobs etc., controller. All of them are packages within Kube-Controller Manager. To view them:
+
+If the cluster is set up with kubeadm:
+
+kubectl get pods -n kube-system
+
+kubeadm deploys the the kube-controller-manager as a pod
+
+```bash
+cat /etc/kubernetes/manifests/kube-controller-manager.yaml
+```
+
+In a none kubeadm set up you can view the options located in
+```bash
+cat /etc/systemd/system/kube-controller-manager.service
+```
+You can also see the running process and respective options by searching kube-controller-manager in the running processes
+```bash
+ps -aux | grep kube-controller-manager
+```
+
 
