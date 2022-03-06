@@ -18,7 +18,7 @@ The control plane is responsible for loading the the containers on the cargo shi
 * Replication controller: Ensures that desired containers are running at all time on the replication group 
 * Kube API Server: Is primary management component of kubernetes which is responsible for orchestrating all operations within cluster it exposes kubernetes API which is used by external users to perform management operations on the cluster, it also monitors state of cluster and perform actions based on that 
 * Container runtime engine: such as docker it is installed on the all nodes including the master nodes to be able to run containers 
-* Kubelet: Is an agent that runs on each mode on a cluster, it listens for instructions from the kube-api server and deploys and destroys containers on the node, the kube-api server periodically fetches status report from kubelet to monitor the status of nodes and containers on them 
+* `kubelet`: Is an agent that runs on each mode on a cluster, it listens for instructions from the kube-api server and deploys and destroys containers on the node, the kube-api server periodically fetches status report from `kubelet` to monitor the status of nodes and containers on them 
 * Kube-proxy: Ensures that necessary rules are in place on the worker nodes to allow containers running on them to reach each other 
 
 
@@ -44,7 +44,7 @@ For high availability we have to set up ETCD as a cluster
 
 Advertised client url: This is the address on which ETCD listens, it is on the IP of the server and on port 2379. This is the url that should be configured on the api server when it tries to reach ETCD server. 
 
-Set up with kubeadm: In this deployment mode, kubeadm sets up ETCD as a pod in the kube-system namespace. We can explore ETCD database using ETCD control utility in this pod. 
+Set up with `kubeadm`: In this deployment mode, `kubeadm` sets up ETCD as a pod in the kube-system namespace. We can explore ETCD database using ETCD control utility in this pod. 
 
 To list all keys stored by kubernetes run the following command:
 
@@ -111,7 +111,7 @@ It is the primary management component in kubernetes. When you run `kubectl` com
 
 For instance when you create a pod, in this case the api server creates a pod object without assigning it to a node and place the information to ETCD server then updates the user that pod has been created. 
 
-The scheduler continuously monitors the api server and realise there's a new pod with no node assigned, the scheduler identifies the right node to place the new pod on. And communicates that back to the api server, then api server updates the information in the etcd cluster. The api server then passes the information to the kubelet in worker node. The kubelet creates the pod in the node and instructs the container runtime engine to deploy the application image. Once done the kubelet updates the status back to the api server and api server updates the data in the etcd cluster. A similar pattern is followed every time a change is requested, the kube-api server is at the center of all tasks that need to be performed in the kubernetes cluster. 
+The scheduler continuously monitors the api server and realise there's a new pod with no node assigned, the scheduler identifies the right node to place the new pod on. And communicates that back to the api server, then api server updates the information in the etcd cluster. The api server then passes the information to the `kubelet` in worker node. The `kubelet` creates the pod in the node and instructs the container runtime engine to deploy the application image. Once done the `kubelet` updates the status back to the api server and api server updates the data in the etcd cluster. A similar pattern is followed every time a change is requested, the kube-api server is at the center of all tasks that need to be performed in the kubernetes cluster. 
 
 ![Kube API Server](images/CKA-kube-api-server.drawio.png)
 
@@ -121,12 +121,12 @@ Kube-API server is responsible for following tasks:
 1. Retrieving data in the ETCD data store (the only component that interacts directly with ETCD)
 1. Updating data in the ETCD data store
 1. Scheduler: Uses api server to perform update in the cluster in their respective areas
-1. Kubelet: Uses api server to perform update in the cluster in their respective areas
+1. `kubelet`: Uses api server to perform update in the cluster in their respective areas
 
 
-> If we set up cluster with kubeadm none of these maters, but if we set it up from scratch then the kube-api server need to be installed with its binary in kubernetes release page.
+> If we set up cluster with `kubeadm` none of these maters, but if we set it up from scratch then the kube-api server need to be installed with its binary in kubernetes release page.
 
-To view kube-api server  options in an existing cluster, with kubeadm, the kube-api server is deployed as a pod in kube-system namespace on the master node 
+To view kube-api server  options in an existing cluster, with `kubeadm`, the kube-api server is deployed as a pod in kube-system namespace on the master node 
 ```bash
 kubectl get pods -n kube-system
 ```
@@ -135,7 +135,7 @@ You can see the option in the kube-apiserver.yaml manifest file
 ```bash
 cat /etc/kubernetes/manifests/kube-apiserver.yaml
 ```
-In a none kubeadm set up you can view the options located in
+In a none `kubeadm` set up you can view the options located in
 ```bash
 cat /etc/systemd/system/kube-apiserver.service
 ```
@@ -155,17 +155,17 @@ Replication controller: It is responsible for monitoring state of replicasets an
 
 There are many more controllers in kubernetes such as endpoint, deployment, jobs etc., controller. All of them are packages within Kube-Controller Manager. To view them:
 
-If the cluster is set up with kubeadm:
+If the cluster is set up with `kubeadm`:
 
 kubectl get pods -n kube-system
 
-kubeadm deploys the the kube-controller-manager as a pod
+`kubeadm` deploys the the kube-controller-manager as a pod
 
 ```bash
 cat /etc/kubernetes/manifests/kube-controller-manager.yaml
 ```
 
-In a none kubeadm set up you can view the options located in
+In a none `kubeadm` set up you can view the options located in
 ```bash
 cat /etc/systemd/system/kube-controller-manager.service
 ```
@@ -175,3 +175,27 @@ ps -aux | grep kube-controller-manager
 ```
 
 
+## Kube Scheduler
+
+The scheduler is only responsible for deciding which pod goes on which node. It doesn't place the pod on the node by itself, that's the job of `kubelet`. The reason that we need a scheduler is because we're dealing with many nodes and much more containers, we want to make sure a container ends up on the right node. The scheduler looks at each pod and tries to find the best node for it. A pod has set of cpu and memory requirements the scheduler goes through two phases to identify best node.
+1. The scheduler tries to filter out the nodes that do not fit the profile for this pod, for example the node that do not have sufficient cpu and memory requested by the pod
+1. The scheduler ranks the leftover nodes to identify the best fit for the pod it uses a priority function to assign a score on a scale of 0 to 10 to nodes. For example it calculate the amount of resources that will be free after assigning the pod on the node if the leftover resource is higher the node scores higher. 
+
+If the cluster is set up with `kubeadm`:
+
+kubectl get pods -n kube-system
+
+`kubeadm` deploys the the kube-scheduler as a pod
+
+```bash
+cat /etc/kubernetes/manifests/kube-scheduler.yaml
+```
+
+In a none `kubeadm` set up you can view the options located in
+```bash
+cat /etc/systemd/system/kube-scheduler.service
+```
+You can also see the running process and respective options by searching kube-scheduler in the running processes
+```bash
+ps -aux | grep kube-scheduler
+```
