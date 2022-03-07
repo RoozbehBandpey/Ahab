@@ -199,3 +199,6 @@ You can also see the running process and respective options by searching kube-sc
 ```bash
 ps -aux | grep kube-scheduler
 ```
+
+## Kubelet
+
