@@ -257,3 +257,55 @@ For scaling scenarios we bring up new pod of the same instance of the applicatio
 
 ## Pods with YAML
 
+Kubernetes uses yaml files as input for creation of objects such as pods, replicas, deployments, etc., all of these follow similar structure, a kubernetes definition files always has four top-level fields `apiVersion`, `kind`, `metadata` and `specs`:
+
+```yml
+apiVersion:
+
+kind:
+
+metadata:
+
+specs:
+```
+These are root level properties and they are required in the yaml manifest. 
+
+* `apiVersion`: The version of kubernetes api we're using to create the object, depending on what we're creating this need to be set respectively
+    * POD `v1`
+    * Service `v1`
+    * ReplicaSet `apps/v1`
+    * Deployment `apps/v1`
+* `kind`: The kind refers to the type of object we're trying to create can be `Pod`, `Service`, `ReplicaSet`, `Deployment` etc.,
+* `metadata` is the data about the object, like its name, labels etc., this is in a form of dictionary. Everything under metadata is indented and the number of spaces does not matter. Labels is also a dictionary and it can have any arbitrary key/values.
+* `specs` is a dictionary containing information n about the image
+    * `containers` is list or array as the pods can have multiple containers in them. the dash `-` before the name indicates that this is an item in the list. 
+
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp-pod
+  labels:
+    app: myapp
+    tier: front-end
+specs:
+  containers:
+  - name: nginx-container
+    image: nginx
+```
+
+To deploy the yaml manifest run
+```bash
+kubectl create -f pod-definition.yml
+```
+or
+```bash
+kubectl apply -f pod-definition.yml
+```
+
+>Create an apply behave the same
+
+To see detailed information about the pod run:
+```bash
+kubectl describe pod myapp-pod
+```
