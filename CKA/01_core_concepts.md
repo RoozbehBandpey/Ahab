@@ -202,3 +202,18 @@ ps -aux | grep kube-scheduler
 
 ## Kubelet
 
+The kubelet in the kubernetes worker node, registers the node with the kubernetes cluster. When it receives instructions to load a container or pod on the node it request the container runtime engine to pull the require an image and run the instance. The kubelet then continue to monitor the state of the pod and containers in it and reports to the kube-api server on a timely basis.
+
+If the cluster is set up with `kubeadm` it does not automatically deploy the kubelet, you must always manually install install kubelet:
+
+You must download the installer, extract it and run it as a service. 
+
+
+You can see the running process and respective options by searching kubelet in the running processes
+```bash
+ps -aux | grep kubelet
+```
+
+## Kube-proxy
+
+Within kubernetes cluster every pod can reach every other pod, this is accomplished by deploying a pod networking solution in the cluster. A pod network is an internal virtual network that spans across all the nodes in the cluster to which all the pods connect to. 
