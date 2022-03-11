@@ -216,4 +216,10 @@ ps -aux | grep kubelet
 
 ## Kube-proxy
 
-Within kubernetes cluster every pod can reach every other pod, this is accomplished by deploying a pod networking solution in the cluster. A pod network is an internal virtual network that spans across all the nodes in the cluster to which all the pods connect to. 
+Within kubernetes cluster every pod can reach every other pod, this is accomplished by deploying a pod networking solution in the cluster. A pod network is an internal virtual network that spans across all the nodes in the cluster to which all the pods connect to. If we have a web application deployed on the node 1 and database deployed on the node 2. The web app can reach the database simply by using the IP of the pod. But there's no guarantee that the IP of the database will stay the same. A better way for the web application to access the database is using services so we create a service to expose the database across the cluster. The web application can now access the database using the name of service. The service also gets an IP address assigned to it. Whenever a pod tries to reach the service using its IP or name it forward the traffic to the backend pod in this case the database. 
+
+A service cannot join the pod network because services in kubernetes are not an actual thing, it is not a container, it does not have any interfaces or an actively listening process. It is a virtual component that only lives in kubernetes memory. Services are accessible across kubernetes cluster from any nodes, this is achieved by kube-proxy.
+
+Kube-proxy is a process that runs on each kubernetes nodes, its job to look for new services and every time a new service is created it creates the appropriate rule to on each node to forward the traffic to those services to the backend pods. One way it does this is by using IP table rules, simply mapping between IP of service and IP of pods
+
+![Kube Proxy](images/CKA-kube-proxy.drawio.png)
