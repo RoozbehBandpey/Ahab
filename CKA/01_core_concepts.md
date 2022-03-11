@@ -223,3 +223,29 @@ A service cannot join the pod network because services in kubernetes are not an 
 Kube-proxy is a process that runs on each kubernetes nodes, its job to look for new services and every time a new service is created it creates the appropriate rule to on each node to forward the traffic to those services to the backend pods. One way it does this is by using IP table rules, simply mapping between IP of service and IP of pods
 
 ![Kube Proxy](images/CKA-kube-proxy.drawio.png)
+
+If the cluster is set up with `kubeadm`:
+
+```bash
+kubectl get pods -n kube-system
+```
+`kubeadm` deploys the the kube-proxy as a pod, in fact it is deployed as daemonset so a single pod is always deployed on each node of cluster:
+```bash
+kubectl get daemonset -n kube-system
+```
+
+```bash
+cat /etc/kubernetes/manifests/kube-proxy.yaml
+```
+
+In a none `kubeadm` set up you can view the options located in
+```bash
+cat /etc/systemd/system/kube-proxy.service
+```
+You can also see the running process and respective options by searching kube-proxy in the running processes
+```bash
+ps -aux | grep kube-proxy
+```
+
+## Pods
+
