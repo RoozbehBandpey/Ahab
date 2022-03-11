@@ -249,3 +249,11 @@ ps -aux | grep kube-proxy
 
 ## Pods
 
+Once application already has been developed and built into docker images, and the build artifact is available in a container registry, kubernetes can pull the image down and deploy the application in form of containers on a set of machines that are configured as worker nodes in a cluster. The containers are encapsulated into a kubernetes object known as pods. A pod is a single instance of an application and is the smallest object that you can create in kubernetes.
+
+For scaling scenarios we bring up new pod of the same instance of the application, if the node has no capacity left the new pods will be deployed in a separate node. Pods have 1-to-1 relation with applications. We are not restricted to have single container in a single pod, for  instance we can have a helper container to support the some additional tasks that a web application needs like processing files uploaded etc., and we might want that these helper containers to live alongside of the application (from application life-cycle standpoint). The two containers can communicated with each other by referring to each other via `localhost` since they share the same network space as well as sharing the same storage space. 
+
+`kubectl run nginx` command deploys a docker container by creating a pod. At first creates a pod automatically and deploys an instance of `nginx` docker image, for the image we have to specify image name using `--image` parameter. The `kubectl get pods` helps to see list of pods. 
+
+## Pods with YAML
+
