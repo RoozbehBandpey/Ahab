@@ -257,7 +257,7 @@ For scaling scenarios we bring up new pod of the same instance of the applicatio
 
 ## Pods with YAML
 
-Kubernetes uses yaml files as input for creation of objects such as pods, replicas, deployments, etc., all of these follow similar structure, a kubernetes definition files always has four top-level fields `apiVersion`, `kind`, `metadata` and `specs`:
+Kubernetes uses yaml files as input for creation of objects such as pods, replicas, deployments, etc., all of these follow similar structure, a kubernetes definition files always has four top-level fields `apiVersion`, `kind`, `metadata` and `spec`:
 
 ```yml
 apiVersion:
@@ -266,7 +266,7 @@ kind:
 
 metadata:
 
-specs:
+spec:
 ```
 These are root level properties and they are required in the yaml manifest. 
 
@@ -277,7 +277,7 @@ These are root level properties and they are required in the yaml manifest.
     * Deployment `apps/v1`
 * `kind`: The kind refers to the type of object we're trying to create can be `Pod`, `Service`, `ReplicaSet`, `Deployment` etc.,
 * `metadata` is the data about the object, like its name, labels etc., this is in a form of dictionary. Everything under metadata is indented and the number of spaces does not matter. Labels is also a dictionary and it can have any arbitrary key/values.
-* `specs` is a dictionary containing information n about the image
+* `spec` is a dictionary containing information n about the image
     * `containers` is list or array as the pods can have multiple containers in them. the dash `-` before the name indicates that this is an item in the list. 
 
 ```yml
@@ -288,7 +288,7 @@ metadata:
   labels:
     app: myapp
     tier: front-end
-specs:
+spec:
   containers:
   - name: nginx-container
     image: nginx

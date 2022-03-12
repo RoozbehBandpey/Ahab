@@ -2,8 +2,10 @@
 
 Create a new pod with the nginx image.
 
+```bash
 kubectl run nginx --image nginx
 
+#Output
 controlplane ~ ➜  kubectl get pods -n default
 NAME    READY   STATUS              RESTARTS   AGE
 nginx   0/1     ContainerCreating   0          5s
@@ -11,17 +13,17 @@ nginx   0/1     ContainerCreating   0          5s
 controlplane ~ ➜  kubectl get pods -n default
 NAME    READY   STATUS    RESTARTS   AGE
 nginx   1/1     Running   0          12s
+```
 
 
 What is the image used to create the new pods?
 
 
 
-You must look at one of the new pods in detail to figure this out.
-
-
-
+```bash
 kubectl describe pod newpods-2vh4b
+
+#Output
 
 Name:         newpods-2vh4b
 Namespace:    default
@@ -77,40 +79,40 @@ Events:
   Normal  Pulled     84s   kubelet            Successfully pulled image "busybox" in 5.697927889s
   Normal  Created    84s   kubelet            Created container busybox
   Normal  Started    84s   kubelet            Started container busybox
+```
 
+Which nodes are these pods placed on?
 
-  Which nodes are these pods placed on?
+```bash
+kubectl get pods -o wide
 
-
-  kubectl get pods -o wide
-  NAME            READY   STATUS    RESTARTS   AGE     IP           NODE           NOMINATED NODE   READINESS GATES
+#Output
+NAME            READY   STATUS    RESTARTS   AGE     IP           NODE           NOMINATED NODE   READINESS GATES
 nginx           1/1     Running   0          3m54s   10.42.0.9    controlplane   <none>           <none>
 newpods-2vh4b   1/1     Running   0          3m26s   10.42.0.11   controlplane   <none>           <none>
 newpods-zz4p8   1/1     Running   0          3m26s   10.42.0.10   controlplane   <none>           <none>
 newpods-xtrkm   1/1     Running   0          3m26s   10.42.0.12   controlplane   <none>           <none>
-
+```
 How many containers are part of the pod webapp?
-
-kubectl describe pod webapp
-
+```bash
+kubectl get pods -o wide
+```
 
 What does the READY column in the output of the kubectl get pods command indicate?
 
 Running Containers in POD/Total Containers in POD
 
 Delete the webapp Pod.
-
+```
 kubectl delete pods webapp
-
+```
 
 Create a new pod with the name redis and with the image redis123.
-
-
-
 Use a pod-definition YAML file. And yes the image name is wrong!
 
-
-controlplane ~ ➜  cat redis.yaml 
+```bash
+vi redis.yaml 
+cat redis.yaml 
 apiVersion: v1
 kind: Pod
 metadata:
@@ -122,21 +124,18 @@ specs:
   containers:
   - name: redis-container
     image: redis123
+redis.yaml 
+```
+
+>Error: spec instead of specs no S
 
 
-
-    spec instead of specs nop S
-
-
-    Now change the image on this pod to redis.
-
-
-
+Now change the image on this pod to redis.
 Once done, the pod should be in a running state.
-
+```bash
 vi redis.yaml
 
-controlplane ~ ➜  cat redis.yaml 
+cat redis.yaml 
 apiVersion: v1
 kind: Pod
 metadata:
@@ -148,8 +147,13 @@ spec:
   containers:
   - name: redis-container
     image: redis
+```
+```bash
+kubectl create -f redis.yaml
 
-controlplane ~ ➜  kubectl create -f redis.yaml
+#Output
 Error from server (AlreadyExists): error when creating "redis.yaml": pods "redis" already exists
-
-controlplane ~ ✖ kubectl delete pod redis
+```
+```bash
+kubectl delete pod redis
+```
