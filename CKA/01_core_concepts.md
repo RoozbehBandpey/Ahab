@@ -309,3 +309,6 @@ To see detailed information about the pod run:
 ```bash
 kubectl describe pod myapp-pod
 ```
+
+[Pods labs](labs/pod_lab.md)
+
