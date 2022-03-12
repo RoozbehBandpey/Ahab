@@ -110,6 +110,12 @@ kubectl delete pods webapp
 Create a new pod with the name redis and with the image redis123.
 Use a pod-definition YAML file. And yes the image name is wrong!
 
+Either we can create the yaml manifest ourselves or use dry run and -o flag:
+
+```bash
+kubectl run redis --image=redis123 --dry-run=client -o yaml > redis.yaml
+```
+
 ```bash
 vi redis.yaml 
 cat redis.yaml 
@@ -132,6 +138,12 @@ redis.yaml
 
 Now change the image on this pod to redis.
 Once done, the pod should be in a running state.
+
+We can either open the manifest file directly with vi or use edit command:
+```bash
+kubectl edit pod redis
+```
+
 ```bash
 vi redis.yaml
 

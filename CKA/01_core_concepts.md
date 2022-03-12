@@ -312,3 +312,68 @@ kubectl describe pod myapp-pod
 
 [Pods labs](labs/pod_lab.md)
 
+## ReplicaSets
+
+Controllers are the brain behind kubernetes, they are processes that monitor kubernetes objects and respond accordingly. A specific type of controller is replication controller.
+
+If we have a single pod running our application, in case our application crashes for whatever reason, the pod will fail. To prevent users to loose access to application we'd like to have more than one instance of our pod running at the same time. That way if one fails the application will be still running on the other one. The replication controller helps us to run multiple instances of a single pod in the kubernetes cluster thus providing high availability. That does not mean we cannot use replication controller if we plan to have a single pod. If we have single pod the replication controller will bring a new one up every time that existing one fails. Replication controller ensures that specified number of pods are running all the time if it is 1 or 100.
+
+Replication controller also helps to share the load across multiple pods, if the node runs out of resource the new pods will be deployed in other nodes with sharing the same replication controller. Meaning the replication controller can span across nodes.
+
+Replication controller and Replica Set both have the same purpose but they are not the same. Replication controller is the legacy version and is being replaces by replica sets. 
+
+`spec` in replicasets simply contains the definition of pods as a nested manifests.
+`replicas` contains the number of replicas
+
+```yaml
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: myapp-rs
+  labels:
+    app: myapp
+    tier: front-end
+spec:
+  template:
+    metadata:
+    name: myapp-pod
+    labels:
+      app: myapp
+      tier: front-end
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx
+  replicas: 3
+  selector:
+    matchLabels:
+      tier: front-end
+```
+
+```bash
+kubectl create -f rs-definition.yaml
+```
+```bash
+kubectl get replicasets
+```
+```bash
+kubectl get pods
+```
+
+>if `apiVersion` is set wrongly you'll get an error as `error: unable to recognize "rs-definition.yaml": no matches for /, Kind=ReplicaSet`
+
+`selector`: Helps the replicasets to identify what pods fall under it, unlike replication controllers, replicasets can manage pods that were not created as part of replicasets creation. The `matchLabels` is the primary function that tells replicasets which pods falls under its control.
+
+### Labels & Selectors
+Imagine we deployed three instances of a front-end web application as three pods, we would like to create a replicaset to ensure we have three active pods at any time. The replicaset is in fact a process that monitors the pods and in case any of them fail, it'll bring up a new one. replicaset uses labels as a filter to identify pods that need to be managed. 
+
+In case we have created our pods with a different manifest (without replicasets) and we would like to put them under control of a replicaset, in this case when replicaset is created it is not going to create a new pods as pods with matching labels are already created but we still have to provide the pod definition under template section. This is because the replicaset has to know what pods to monitor.
+
+
+### Scaling Replicasets
+if we want to scale a replicaset to a higher number of pods
+1. We can update the number of replicas in the replicaset's definition file we run `kubectl replace -f rs-definition.yaml`
+1. Run `kubectl scale --replicas=6 -f rs-definition.yaml` or `kubectl scale --replicas=6 replicaset myapp-replicaset` the first option does not update the number of replicas in the file
+1. update automatically based on load
+
+
