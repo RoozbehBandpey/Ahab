@@ -380,3 +380,93 @@ if we want to scale a replicaset to a higher number of pods
 [ReplicaSets labs](labs/02_replicaset_lab.md)
 
 ## Deployments
+
+Imagine we have a web server that need to be deployed in the production environment. And for scalability reasons we need multiple instances of this web server running. Secondly wwe also want that whenever newer version of the  application image becomes available in the container registry, we would like to upgrade our containers seamlessly. We also might want to not upgrade everything all at once, rather one after another, known as rolling updates. In case one of the upgrades results in an unexpected error and we want to undo the changes, we would like to be able to roll back the changes that were carried out. Lastly we also want to be able to pause the deployment to be able to apply changes on infrastructure then resume the deployment.
+
+All of these are available within kubernetes deployments. Deployment comes higher in the hierarchy after ReplicaSets. Meaning it contains replicasets and pods. The deployment help us to change underlying instances using rolling updates, undo, pause and resume changes if required. 
+
+### Deployment definition file
+
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp-d
+  labels:
+    app: myapp
+    tier: front-end
+spec:
+  template:
+    metadata:
+    name: myapp-pod
+    labels:
+      app: myapp
+      tier: front-end
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx
+  replicas: 3
+  selector:
+    matchLabels:
+      tier: front-end
+```
+
+```bash
+kubectl create -f d-definition.yaml
+```
+```bash
+kubectl get deployments
+```
+```bash
+kubectl get replicasets
+```
+```bash
+kubectl get pods
+```
+
+ The only difference to replicaset is that, deployment will create a new kubernetes object called deployment. 
+
+ To get the all objects at once, run:
+ ```bash
+kubectl get all
+```
+
+## Exam Tip
+Here's a tip!
+
+It is a bit difficult to create and edit YAML files. Especially in the CLI. During the exam, you might find it difficult to copy and paste YAML files from browser to terminal. Using the `kubectl run` command can help in generating a YAML template. And sometimes, you can even get away with just the kubectl run command without having to create a YAML file at all. For example, if you were asked to create a pod or deployment with specific name and image you can simply run the kubectl run command.
+
+Use the below set of commands:
+
+Create an NGINX Pod
+```bash
+kubectl run nginx --image=nginx
+```
+Generate POD Manifest YAML file (-o yaml). Don't create it(--dry-run)
+```bash
+kubectl run nginx --image=nginx --dry-run=client -o yaml
+```
+Create a deployment
+```bash
+kubectl create deployment --image=nginx nginx
+```
+Generate Deployment YAML file (-o yaml). Don't create it(--dry-run)
+```bash
+kubectl create deployment --image=nginx nginx --dry-run=client -o yaml
+```
+Generate Deployment YAML file (-o yaml). Don't create it(--dry-run) with 4 Replicas (--replicas=4)
+```bash
+kubectl create deployment --image=nginx nginx --dry-run=client -o yaml > nginx-deployment.yaml
+```
+Save it to a file, make necessary changes to the file (for example, adding more replicas) and then create the deployment.
+```bash
+kubectl create -f nginx-deployment.yaml
+```
+OR
+
+In k8s version 1.19+, we can specify the --replicas option to create a deployment with 4 replicas.
+```bash
+kubectl create deployment --image=nginx nginx --replicas=4 --dry-run=client -o yaml > nginx-deployment.yaml
+```
