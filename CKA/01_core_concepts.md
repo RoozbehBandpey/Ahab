@@ -310,7 +310,7 @@ To see detailed information about the pod run:
 kubectl describe pod myapp-pod
 ```
 
-[Pods labs](labs/pod_lab.md)
+[Pods labs](labs/01_pod_lab.md)
 
 ## ReplicaSets
 
@@ -377,3 +377,6 @@ if we want to scale a replicaset to a higher number of pods
 1. update automatically based on load
 
 
+[ReplicaSets labs](labs/02_replicaset_lab.md)
+
+## Deployments
