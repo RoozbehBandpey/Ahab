@@ -433,6 +433,8 @@ kubectl get pods
 kubectl get all
 ```
 
+[Deployments labs](labs/03_deployment_lab.md)
+
 ## Exam Tip
 Here's a tip!
 
