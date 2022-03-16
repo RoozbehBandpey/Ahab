@@ -470,3 +470,101 @@ In k8s version 1.19+, we can specify the --replicas option to create a deploymen
 ```bash
 kubectl create deployment --image=nginx nginx --replicas=4 --dry-run=client -o yaml > nginx-deployment.yaml
 ```
+
+## Namespaces
+
+Best way to understand namespaces is family analogy, imagine there are two families, Bandpeys and Smiths. They both have a daughter name Emy. In the house they refer to Emy by name but if Bandpeys wnt to talk about Smith's Emy they would refer to her with full name (Emy Smith). Each of these families have their own set of rules that defines who does what. As well as having their own resources that they can consume. 
+
+The `default` namespace is created automatically when the cluster is first set up. Every pods and services that are required by kubernetes internal set up will be under `kube-system` namespace. `kube-public` is another namespace that is created by kubernetes  automatically, this will hold resources that should be made available to all users. Namespaces can have specific policies defined as well as quota limits. 
+
+If we want to connect to a database within the namespace we can simply refer to its name
+```bash
+mysql.connect("db-service")
+```
+However if a resource wants to connect to a database in another namespace (`dev` for instance) we must append the namespace on service name:
+```bash
+mysql.connect("db-service.dev.svc.cluster.local")
+```
+
+When a service is created a dns entry is added automatically in this format. `cluster.local` is the default domain name of kubernetes cluster. `svc` is the subdomain for service, `dev` is namespace and `db-service` is the name of the service itself.
+
+`kubectl get pods` will list the pods in the default namespace. To get the pods in another namespace use the following:
+
+```bash
+kubectl get pods --namespace=kube-system
+```
+
+If th namespace is not mentioned in pod manifest file, the pod will be created in the default namespace. In order to create a pod in a name space use the following:
+
+```bash
+kubectl create -f pod-definition.yml --namespace=dev
+```
+
+or the following in pod manifest:
+
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp-pod
+  namespace: dev
+  labels:
+    app: myapp
+    tier: front-end
+spec:
+  containers:
+  - name: nginx-container
+    image: nginx
+```
+
+In order to create a new namespace like any object in kubernetes we can use the namespace definition file:
+```yml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dev
+```
+
+```bash
+kubectl create -f namespace-dev.yml
+```
+or 
+
+```bash
+kubectl create namespace ev
+```
+
+In order to switch  to a namespace permanently
+
+```bash
+kubectl config set-context $(kubectl config current-context) --namespace dev
+```
+This command first identifies the current context and then sets the context to the one with desired namespace.
+
+To view resources in all namespaces run:
+
+```bash
+kubectl get pods --all-namespaces
+```
+
+To create a resource quota start by creating a definition file:
+
+```yml
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: compute-quota
+  namespace: dev
+spec:
+  hard:
+    pods: "10"
+    requests.cpu: "4"
+    requests.memory: 5Gi
+    limits.cpu: "10"
+    limits.memory: 10Gi
+```
+
+```bash
+kubectl create -f compute-quota.yaml
+```
+
