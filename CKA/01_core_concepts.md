@@ -652,3 +652,6 @@ spec:
 
 ### LoadBalancer
 
+Once pods are deployed inside multiple nodes we will end up with multiple urls to access the application, one solution might be setting a up an external load balancer  and then configure it to route the traffic to different nodes. If we were on a cloud provider we could leverage a native load balancer, kubernetes has the capability of connecting to native load balancer of major cloud providers.
+
+All we have to do is to set the  service type for the front-end services from NodePort tp LoadBalancer. If the support for load balancer is not possible in the cloud provider it'll have same effect as NodePort.
