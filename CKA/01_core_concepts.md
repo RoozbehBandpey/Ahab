@@ -579,3 +579,76 @@ Let's assume we have deployed a pod having a web application on it, how an exter
 The kubernetes node has an IP address of `192.168.1.2`, imagine user is in the same network, with IP of `192.168.1.10` and the internal pod network is in the range of `10.244.0.0` clearly the user cannot ping or access the pod at address `10.244.0.15` as it is in a separate network. If we were to ssh to the kubernetes node, from  the node we would be able to access the pod by running `curl http://10.244.0.2`. But we want to access the pod from an external network, without having to ssh into the node and simply by IP address of the kubernetes node. We need something in the middle that help us map request from the laptop through the node to the pod. The kubernetes service is an object which one of it's use case it to listen to a port on the node and forward request on that port to a port on the pod running an application. This type of service is know as a nodeport service. 
 
 ![Kubernetes Services](images/CKA-services.drawio.png)
+
+### Nodeport
+In nodeport, there are three ports involved:
+* The port on the pod where the actual web server is running is `80` and it is refereed to as target port. Because that's where the service forwards the requests to.
+* The port on the service itself, the service in fact is like a virtual server inside the node. Inside the cluster it has its own IP address and that IP address is called the ClUSTER-IP of the service.
+* The port on node itself, which we use to access the web service externally, that is known as nodeport. It is set to `30008` because nodeports can only be in the valid range which by default is from `30000` to `32767` 
+
+![Nodeport](images/CKA-nodeport.drawio.png)
+
+For creation f a service we'll use a definition file:
+
+```yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+spec:
+  type:  NodePort
+  ports: 
+  - targetPort: 80
+    port: 80
+    nodePort: 30008
+  selector:
+    app: myapp
+    tier: front-end
+```
+
+```bash
+kubectl create -f service-definition.yml 
+```
+```bash
+kubectl get services
+
+
+will give us the ClUSTER-IP and nodeport and port so we can access it curl
+```
+
+```bash
+curl http://192.168.1.2:30008
+```
+
+`ports` is an array, so we have have multiple such port mapping within a single service. 
+For connecting the service to the pod, we will use labels ans selector to link these together. We simply pull the labels from the pod definition file ad place it under the selector section .
+
+In production environment we have multiple pods,they have different IP addresses and they all have same labels with the key `app` and `tier` these label values are use as selector during creation of a service. The service select all the pods as endpoints to forward the external request coming from the user. The service acts as a built-in load balancer to distribute the load across the pods and there's no magical algorithm behind it, it just simply distribute the requests randomly. 
+
+If the pods are distributed across multiple nodes, once we create a service without doing any additional setup kubernetes automatically spans the service across all nodes. In this  case we can access the application using the IP of each node.
+
+### ClusterIP
+Assuming an application would have frontend, backend and persistent layer, what is the right way to establish connectivity between the different tier of an  application?
+
+
+The pods all have an IP address assign to them but these IPs as we know are not static.  A kubernetes service can help us to group the service together, and provide a single interface to access the pods in a group. Each service gets an IP and name assign to it, and hat is the name should be used by other pods to access the service. This type of service is know as ClusterIP.
+
+For creation f a ClusterIP:
+
+```yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+spec:
+  type:  ClusterIP
+  ports: 
+  - targetPort: 80
+    port: 80
+  selector:
+    app: myapp
+    tier: back-end
+```
+
+### LoadBalancer
+
