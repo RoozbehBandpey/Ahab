@@ -570,3 +570,12 @@ spec:
 kubectl create -f compute-quota.yaml
 ```
 
+## Services
+
+Kubernetes services enable communication between various components of the application within and outside of kubernetes cluster. It is services that enable connectivity between groups of pods. For instance enabling frontend applications to end users, also enabling communication between backend and frontend pods, and helps establishing connectivity to an external data source. Service provide loose coupling in a microservice application. 
+
+Let's assume we have deployed a pod having a web application on it, how an external user access that web page?
+
+The kubernetes node has an IP address of `192.168.1.2`, imagine user is in the same network, with IP of `192.168.1.10` and the internal pod network is in the range of `10.244.0.0` clearly the user cannot ping or access the pod at address `10.244.0.15` as it is in a separate network. If we were to ssh to the kubernetes node, from  the node we would be able to access the pod by running `curl http://10.244.0.2`. But we want to access the pod from an external network, without having to ssh into the node and simply by IP address of the kubernetes node. We need something in the middle that help us map request from the laptop through the node to the pod. The kubernetes service is an object which one of it's use case it to listen to a port on the node and forward request on that port to a port on the pod running an application. This type of service is know as a nodeport service. 
+
+![Kubernetes Services](images/CKA-services.drawio.png)
