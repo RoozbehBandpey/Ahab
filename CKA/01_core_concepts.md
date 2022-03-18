@@ -765,3 +765,9 @@ kubectl create service nodeport nginx --tcp=80:80 --node-port=30080 --dry-run=cl
 
 Both the above commands have their own challenges. While one of it cannot accept a selector the other cannot accept a node port. It's better going with the kubectl expose command. If you need to specify a node port, generate a definition file using the same command and manually input the nodeport before creating the service.
 
+
+## Apply Command
+
+The apply command always consider the current definition file, the current state of configurations before applying any changes. If the object already does not exist it'll be created, once object is created an object configuration definition  similar to the object will be created on kubernetes. The live object configuration may contain additional fields to store the state of the object. 
+
+After running the apply command the yaml version of local manifest will be converted to json. Then it is stored as the last applied configuration,. When new changes are applied in the local yaml manifest it'll be further compared with live object configuration and the changes will be identified. After applying changes it'll be stored ass last applied configuration in json format. 
