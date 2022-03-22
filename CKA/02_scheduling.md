@@ -80,3 +80,54 @@ spec:
 ### Annotations
 
 Annotations are used to record other information about the object, for example build version, name, contact details, phone numbers, emails etc.,
+
+## Taints & Tolerations
+
+Taints & tolerations are used to set restrictions on what pods can be scheduled on what nodes. When the pods are created kubernetes scheduler tries to place the pods in the available worker nodes. In the beginning there's no restriction and kubernetes scheduler tries to balance the pods equally on nodes. Now let's assume we have a particular application that we want the pods to go only to a specific node.  We can prevent pods on going to specific node by  placing taint on the node. By default pods have no toleration, meaning unless otherwise specified none of the pods can tolerate any taint. For the pods that we want them to go on the node we must specify toleration of the taint. 
+
+To taint a node:
+
+```bash
+kubectl taint nodes <node name> key=value:taint-effect
+```
+The taint is in form of key value pairs, the taint-effect specifies the situation which the pods do not tolerate this taint. There are three tain-effects:
+* `NoSchedule` Which means the pod will not be scheduled on the node
+* `PreferNoSchedule` The system will try  to avoid placing a pod on the node, but that is not guaranteed
+* `NoExecute` New pods will not be scheduled on the node and existing pods on the node (if any) will be evicted if they do not tolerate the taint.
+
+
+```bash
+kubectl taint nodes node1 app=blue:NoSchedule
+```
+
+To add a toleration to a pod add the following in the manifest:
+All if these values need to be in double quotes
+
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp-pod
+  labels:
+    app: myapp
+    tier: front-end
+spec:
+  containers:
+  - name: nginx-container
+    image: nginx
+  tolerations:
+  - key: "app"
+    operator: "Equal"
+    value: "blue"
+    effect: "NoSchedule"
+```
+
+When the pods are now created or updated with new tolerations, they  are  either not scheduled on the nodes or evicted from existing node depending on the effect.
+
+In case of `NoExecute` if we have three nodes with pods runnin on them, if we decide at some point that we want to dedicate one node to a specific kind of application after we apply taint on the node, the moment the taint takes effect, it'll keep whatever pods that have the toleration and evict  the pods that do not have the tolertions, What happens to evicted pods?
+
+The scheduler does not place any pod on master node, when the kubernetes cluster is first set up, it taint the master node that prevent any pod to be scheduled on master node. To see this taint run the following:
+
+```bash
+kubectl describe node kubemaster | grep Taint
+```
