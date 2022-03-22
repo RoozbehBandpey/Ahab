@@ -37,3 +37,46 @@ target:
 ```bash
 curl --header "Content-Type:application/json" --request POST --data '{"apiVersion": "V1",  "kind": "Binding",...}' http://$SERVER/api/v1/namespaces/default/pods/$PODNAME/binding
 ```
+
+## Labels & Selectors
+
+Labels are a way to attach properties to objects and selectors are a way to filter based on those labels. We can group objects by their type, application or functionality. We will attach labels to each object and while selecting we'll specify a condition to narrow down the objects.
+
+Once the pod is created, to select the pod with labels use the following parameter:
+
+```bash
+kubectl get pods --selector app=App1
+```
+
+Kubernetes cluster also uses labels and selectors to connect different objects together. For example for creating a replicaset consisting of three different pods, we first label the pod definition and then use selector in replicaset to group the pods. In a replicaset definition file we'll see labels defined in two places, the labels defined under template section are the labels configured on the pod, the labels at the top are the labels of replicaset itself. The labels of replicaset are used if we were to configure another object that  is suppose  to discover replicaset itself. For connecting the replicaset to the pods we will use the selector  field to  match the labels of the pods.
+
+```yaml
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: myapp-rs
+  labels:
+    app: myapp
+    tier: front-end
+  annotations:
+    buildVersion: 1.34
+spec:
+  template:
+    metadata:
+    name: myapp-pod
+    labels:
+      app: myapp
+      tier: front-end
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx
+  replicas: 3
+  selector:
+    matchLabels:
+      tier: front-end
+```
+
+### Annotations
+
+Annotations are used to record other information about the object,  for example build version, name, contact details, phone numbers, emails etc.,
