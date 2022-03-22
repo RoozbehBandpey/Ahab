@@ -79,4 +79,4 @@ spec:
 
 ### Annotations
 
-Annotations are used to record other information about the object,  for example build version, name, contact details, phone numbers, emails etc.,
+Annotations are used to record other information about the object, for example build version, name, contact details, phone numbers, emails etc.,
