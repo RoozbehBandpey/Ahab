@@ -131,3 +131,8 @@ The scheduler does not place any pod on master node, when the kubernetes cluster
 ```bash
 kubectl describe node kubemaster | grep Taint
 ```
+
+To look up all the options available run the following:
+```bash
+kubectl explain pod --recursive | less
+```
