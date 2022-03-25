@@ -176,3 +176,84 @@ kubectl label node node-1 size=Large
 Node selector has limitations, we use a single label and selector to achieve our goal here. But if the requirement is much  more complex, for instance if  we want to  place a pod on a large or medium node. Or place the pod on any node that are not small, this cannot be achieved with node labels and selectors. For this  we have to use node affinity and anti affinity rules.
 
 ## Node Affinity
+The primary purpose of node affinity features are to ensure pods are hosted on particular nodes. The same pod as before with node affinity will look like the following although both will do exact same thing.
+
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp-pod
+  labels:
+    app: myapp
+    tier: front-end
+spec:
+  containers:
+  - name: nginx-container
+    image: nginx
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: size
+            operator: In
+            values:
+              - Large
+```
+
+The node affinity ensure that the pod is place on a node that its size label value is in the given values. If we want to place the pod in  the node that is large or medium we have to  specify the following:
+
+```yml
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: size
+            operator: In
+            values:
+              - Large
+              - Medium
+```
+For placing the pod on any node that are not small, we can use `NotIn` operator
+
+```yml
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: size
+            operator: NotIn
+            values:
+              - Small
+```
+
+
+The `Exists` operator will simply check if label exists on the node, and we don't need the value section of it.
+
+What if there are no node with the label called `size`, or what if  someone changes the labels at some point in time. All of this addressed by type of node affinity, in our case `requiredDuringSchedulingIgnoredDuringExecution` 
+
+The type of node affinity will define the behavior of the scheduler with respect to the affinity, and the stages in the lifecycle of the pod
+
+* `requiredDuringSchedulingIgnoredDuringExecution` 
+* `preferredDuringSchedulingIgnoredDuringExecution` 
+* `requiredDuringSchedulingRequiredDuringExecution` 
+
+There are two sates in the lifecycle of the pods when it comes to node affinity
+
+||DuringScheduling|DuringExecution|
+|--------------|--------------|--------------|
+|Type 1|required|ignored|
+|Type 2|preferred|ignored|
+|Type 3|required|required|
+
+
+DuringScheduling: is when the pod does not exist and it's created for the first time, in this  case the affinity rules will place the pods on the right nodes
+
+If the nodes with matching labels are not available, or for example we forgot to label nodes as `Large` in that case the type of node affinity rules comes into play
+* required: The scheduler will mandate  that the pod with the given affinity rules will be placed on the node, if it cannot find one, the pod will not be scheduled. This type will be used where the placement of the pods are crucial.
+* preferred: If the pod placement is less important than running the workload itself, if the matching node is not found the scheduler will ignore node affinity rules, and place the pod on any available nodes. This is a way to tell scheduler to try your best to place the pod on any matching node, ig tou cannot find one just  place it anywhere.
+
+DuringExecution: is when the pod has been running and a change has been made in the environment that effects node affinity, such as changes in the label. For example an administrator removed the `Large` label
+
+* ignored: means pods will continue to run, and any changes in node affinity will not impact them once they are scheduled
+* required: Will evict any pod that are running on the node that do not meet affinity rules
