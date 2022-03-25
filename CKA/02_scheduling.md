@@ -136,3 +136,43 @@ To look up all the options available run the following:
 ```bash
 kubectl explain pod --recursive | less
 ```
+
+## Node Selectors
+
+
+Imagine we have a three node cluster, one of them is a larger node with higher resources available. If we have a process like data processing that require higher resources we would like to schedule it on the bigger node so in case the process need to scale there would be enough resources available. In the default setup any pod can go to any node. To solve this we can set limitation on the pod so it can only run on specific nodes.
+
+There are two ways to do this:
+
+### 1. Node Selectors
+Under `nodeSelector` we have to specify the size as large. The key value pair of `size: Large` are in fact labels assigned to nodes. The scheduler use this labels to match and identify nodes to assign pods on. The nodes must be labeled prior to creating these pods. 
+
+
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp-pod
+  labels:
+    app: myapp
+    tier: front-end
+spec:
+  containers:
+  - name: nginx-container
+    image: nginx
+  nodeSelector:
+    size: Large
+```
+
+To label a node run the following command:
+```bash
+kubectl label node <node-name> <label-key>=<label-value>
+```
+For example
+```bash
+kubectl label node node-1 size=Large
+```
+
+Node selector has limitations, we use a single label and selector to achieve our goal here. But if the requirement is much  more complex, for instance if  we want to  place a pod on a large or medium node. Or place the pod on any node that are not small, this cannot be achieved with node labels and selectors. For this  we have to use node affinity and anti affinity rules.
+
+## Node Affinity
