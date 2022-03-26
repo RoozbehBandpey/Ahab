@@ -496,3 +496,54 @@ Static pods can be used to deploy the controlplane components:
 |Both are ignored by the kube-scheduler|
 
 ## Multiple Schedulers
+
+
+The scheduler has an algorithm that distribute pods on nodes evenly as well as taking into consideration the various conditions specified through taints and tolerations, node affinity etc., 
+
+If none of these satisfy our needs we must have our own scheduling algorithm to place pods on nodes. Kubernetes is highly extendable, we can write our own scheduler program, package it and deploy it as default or additional scheduler on the cluster. We we deployed pods we can tell to kubernetes that a specific pod need to be scheduled by a specific scheduler. 
+
+To deploy an additional scheduler we might use `--scheduler-name=my-custom-scheduler` while installing the scheduler. The name must be different than the `default-scheduler`. 
+
+The kubeadm tool deploys the scheduler as a pod, We can find the definition that it uses, under the manifests folder. We can creating another scheduler by copying the same file and changing the name of the scheduler under the command section. Another important option is the `leader-elect` this is used whn we use multiple copy of a scheduler running on different master nodes, in this case only one scheduler can be active at a time, the leader will choose that who will be leading the scheduling activity.
+
+We must either set the `leader-elect` option to false, in case when we don't have multiple masters.
+Otherwise, we can pass in an additional parameter, to set a lock object name `--lock-object-name=my-custom-scheduler` this is to differentiate the new custom scheduler from the default during the leader election process.
+
+We can run the following to get the new scheduler:
+
+```bash
+kubectl get pods --namespace=kube-system
+```
+To make a pod to use the new scheduler, when can specify the `schedulerName` in pod specification file.
+
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp-pod
+  labels:
+    app: myapp
+    tier: front-end
+spec:
+  containers:
+  - name: nginx-container
+    image: nginx
+  schedulerName: my-custom-scheduler
+```
+After pod has been created the right scheduler picks it up for scheduling, if the scheduler was not configured correctly the pod will remain in the pending state. 
+
+In order to see which scheduler picked up our pods
+
+```bash
+kubectl get events
+```
+
+Look for the `scheduled` events the source of event must be the name of scheduler. 
+
+To view logs of the scheduler:
+
+```bash
+kubectl logs my-custom-scheduler --name-space=kube-system
+```
+
+
