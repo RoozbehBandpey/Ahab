@@ -268,3 +268,75 @@ Using taints and tolerations we apply taints on our nodes using their color. The
 With node affinity we first label the nodes with their respective color, The we set node selectors on the pods to tie the node to the pods. however this does not guarantee that other teams pods does not end up on our nodes. 
 
 For this a combination of taints and tolerations with node affinity need to be used. We first use taints and tolerations to prevent other pods on our nodes, then we use node affinity to prevent our pods to be placed on other nodes. 
+
+## Resource Requirements and Limits
+
+Imagine a three node kubernetes cluster, each node has set of CPU, memory and disk resources available. Every pod consumes set of resources, whenever a pod is placed on a node, it consumes resources available to that node, it is the kubernetes scheduler that decides which node a pod goes to. The scheduler take into consideration the amount of resources  required by a pod and those available on the nodes. If the node has no sufficient resources, the scheduler avoids placing the pod on that node, instead places the pod on a node where sufficient resources are available. If there's nop sufficient resources available on any node, kubernetes holds back the scheduling of the pod, we will see the pod on the `pending` state. If you look up the events you'll see the reason `Insufficient cpu`. 
+
+By default kubernetes assumes that a pod (or a container within the pod), requires `0.5 cpu` and `256 Mi` of memory, this is known as the **resource request** for a container. When the scheduler tries to place the pod on the node it uses these number to identify the node which has sufficient amount of resources available. 
+
+If the application needs more than these we can specify the amount of resources in pod or deployment definition file:
+
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp-pod
+  labels:
+    app: myapp
+    tier: front-end
+spec:
+  containers:
+  - name: nginx-container
+    image: nginx
+    resources:
+      requests:
+        memory: "1Gi"
+        cpu: 1
+```
+In this case the pod is going to request 1 Gibibyte of memory and 1 count of vcpu. 
+
+For cpu we can specify any value as low as `0.1`, this can be also expressed as `100m` where `m` stands for mili. We can go as low as `1m` but not lower than that. 
+
+1 count of cpu is equal to `1 AWS vCPU`, `1 GCP Core`, `1 Azure Core` and  `1 Hyperthread` 
+
+
+For memory note the difference between `G` and `Gi`
+
+* `1 G (Gigabyte) = 1,000,000,000 bytes`
+* `1 M (Megabyte) = 1,000,000 bytes`
+* `1 K (Kilobytes) = 1,000 bytes`
+* `1 Gi (Gibibyte) = 1,073,741,828 bytes`
+* `1 Mi (Mebibyte) = 1,048,576 bytes`
+* `1 Ki (Kibibyte) = 1,024 bytes`
+
+In the docker world a docker container has no limit on the resources it can consume on a node, let's say a container can start with `1 vCPU` on a node it can go up and consume as much as resources it requires, suffocating the native processes on the node or other containers.
+
+However we can set a resource usage limit on the pods by default kubernetes set the limit of `1 vCPU` and `512 Mi` to the containers. This can be changed with specifying the limits:
+
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp-pod
+  labels:
+    app: myapp
+    tier: front-end
+spec:
+  containers:
+  - name: nginx-container
+    image: nginx
+    resources:
+      requests:
+        memory: "1Gi"
+        cpu: 1
+      limits:
+        memory: "2Gi"
+        cpu: 2
+```
+
+> The limits and requests are set for each container within the pod
+
+If a pod tries to exceed resources beyond its specified limit, in case of cpu, kubernetes throttles the cpu. But for the memory a container can use more memory than its specified limits, if a pod tries to consume more memory than its limit constantly the pod will be terminated.
+
+
