@@ -461,3 +461,38 @@ kubectl get daemonsets
 
 As we could set the nodename property on the pod to bypass scheduler and get the pod placed on a node directly. From kubernetes version 1.12 onwards DaemonSet uses default scheduler and node affinity rules to schedule pods on nodes. 
 
+## Static Pods
+
+The kubelet relies on kube-api-server on instructions on what pods to load on nodes. This is based on a decision made by kube-scheduler which is stored in the etcd datastore.
+
+Imagine there's no master node, can kubelet operate by itself? Kubelet can manage a node independently, there is docker installed but there's no kubernetes cluster. The one thing that kubelet knows to do, is to create pods, but we don't have an api-server to provide pod details.
+
+We can configure kubelet to read information about pods from a directory on the node designated for pod manifests. If we place a pod definition file in this this directory `etc/kubernetes/manifests` the kubelet periodically checks this directory, reads the files and creates pods on the node. It can also assure that the pods stay alive. If the application crashed the kubelet attempt to restart it. If we apply changes in the files in this directory the changes will be applied on the pods. If we remove a file from this directory the pod will be deleted automatically.
+
+These pods are known as static pods. We can only create pods in this way, this won't work for replicasets, deployments, services, etc.,
+
+The kubelet works at a pod level and can only understand pods.
+
+The path can be any directory on the host and the location is passed to kubelet as an option while running the service. the option is called `--pod-manifest-path` The path can also be specified in a separate config file `--config=kubeconfig.yaml`, `staticPodPath: /etc/kubernetes/manifests` cluster setup by kubeadm uses this approach. 
+
+Once static pods are created we can view the by running `docker ps` command. `kubectl` won't work because we assume we don't have rest of the kubernetes cluster. But if there's a kubernetes master node and kube-api-server in case of static pods, the kube-api-server is also aware of static pods, so `kubectl` command will work.
+
+When the kubelet creates a static pod, if it is part of a cluster it also creates a mirror object in the kube-api-server, which is just a readonly mirror of the pod. We can view details about the pod but we cannot edit or delete it like usual pods. These can be only deleted by deleting the files from node's manifest folder. The name of the pod will be automatically appended with the node name. 
+
+Static pods can be used to deploy the controlplane components:
+* Start by installing kubelet on all the master nodes
+* Then create pod definition files that uses docker images of various controlplane components such as api-server, etcd etc.,
+* Place the definition file in the manifest folder
+* Kubelet will take care of the rest
+
+> This way we don't have to deal with downloading binaries, installing etc., in case of crash the kubelet will bring them up again. That's how kubeadm sets up a cluster. Which is why when we view pods under system `kubectl get pods -n kube-system` we will see those components as pods.
+
+### Difference of static pods and DaemonSets
+
+|Static Pods | DaemonSets|
+|-----------|-----------|
+|Created by the kubelet|Created by kube-api server (DaemonSet Controller)
+| Deploy Control Plane components as Static Pods| Deploy Monitoring Agents, Logging Agents on nodes
+|Both are ignored by the kube-scheduler|
+
+## Multiple Schedulers
