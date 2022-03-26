@@ -83,3 +83,4 @@ red-5cbd45ccb6-zc6xk    1/1     Running             0          15s     10.244.0.
 red-7748479b97-2wqpz    1/1     Terminating         0          6m36s   10.244.1.9   node01         <none>           <none>
 red-7748479b97-6mfqs    1/1     Running             0          6m36s   10.244.1.8   node01         <none>           <none>
 ```
+

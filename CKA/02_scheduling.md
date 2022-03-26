@@ -256,4 +256,15 @@ If the nodes with matching labels are not available, or for example we forgot to
 DuringExecution: is when the pod has been running and a change has been made in the environment that effects node affinity, such as changes in the label. For example an administrator removed the `Large` label
 
 * ignored: means pods will continue to run, and any changes in node affinity will not impact them once they are scheduled
-* required: Will evict any pod that are running on the node that do not meet affinity rules
+* required: Will evict any pod that are running on the node that do not meet affinity rules.
+
+
+## Taints & Tolerations vs Node Affinity
+
+Imagine we have three nodes (blue, green and red) and three pods with same colors. The ultimate aim is to place the pods on the nodes with the correct color. And we are sharing the kubernetes cluster with other teams so we don not want to place pods on other team's node as well as preventing them to place pods on our nodes. 
+
+Using taints and tolerations we apply taints on our nodes using their color. The we set tolerations on the pods to tolerate the respective colors. Now when the pods are created the nodes will ensure that they will accept the pods with the tolerations. But taints and tolerations does not guarantee the the pods will end up in the tainted nodes, so they can actually end up on other teams pods if their nodes are not tainted.
+
+With node affinity we first label the nodes with their respective color, The we set node selectors on the pods to tie the node to the pods. however this does not guarantee that other teams pods does not end up on our nodes. 
+
+For this a combination of taints and tolerations with node affinity need to be used. We first use taints and tolerations to prevent other pods on our nodes, then we use node affinity to prevent our pods to be placed on other nodes. 
