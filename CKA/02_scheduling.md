@@ -340,3 +340,77 @@ spec:
 If a pod tries to exceed resources beyond its specified limit, in case of cpu, kubernetes throttles the cpu. But for the memory a container can use more memory than its specified limits, if a pod tries to consume more memory than its limit constantly the pod will be terminated.
 
 
+When a pod is created the containers are assigned a default CPU request of .5 and memory of 256Mi". For the POD to pick up those defaults you must have first set those as default values for request and limit by creating a LimitRange in that namespace.
+
+
+```yml
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: mem-limit-range
+spec:
+  limits:
+  - default:
+      memory: 512Mi
+    defaultRequest:
+      memory: 256Mi
+    type: Container
+```
+```yml
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: cpu-limit-range
+spec:
+  limits:
+  - default:
+      cpu: 1
+    defaultRequest:
+      cpu: 0.5
+    type: Container
+```
+
+### Edit a POD
+Remember, you CANNOT edit specifications of an existing POD other than the below.
+
+* `spec.containers[*].image`
+* `spec.initContainers[*].image`
+* `spec.activeDeadlineSeconds`
+* `spec.tolerations`
+
+For example you cannot edit the environment variables, service accounts, resource limits of a running pod. But if you really want to, you have 2 options:
+
+1. Run the `kubectl edit pod <pod name> command`.  This will open the pod specification in an editor (vi editor). Then edit the required properties. When you try to save it, you will be denied. This is because you are attempting to edit a field on the pod that is not editable.
+
+    A copy of the file with your changes is saved in a temporary location.
+
+    You can then delete the existing pod by running the command:
+
+    `kubectl delete pod webapp`
+
+
+
+    Then create a new pod with your changes using the temporary file
+
+    `kubectl create -f /tmp/kubectl-edit-ccvrq.yaml`
+
+2. The second option is to extract the pod definition in YAML format to a file using the command
+
+    `kubectl get pod webapp -o yaml > my-new-pod.yaml`
+
+    Then make the changes to the exported file using an editor (vi editor). Save the changes
+
+    `vi my-new-pod.yaml`
+
+    Then delete the existing pod
+
+    `kubectl delete pod webapp`
+
+    Then create a new pod with the edited file
+
+    `kubectl create -f my-new-pod.yaml`
+
+### Edit Deployments
+With Deployments you can easily edit any field/property of the POD template. Since the pod template is a child of the deployment specification,  with every change the deployment will automatically delete and create a new pod with the new changes. So if you are asked to edit a property of a POD part of a deployment you may do that simply by running the command
+
+`kubectl edit deployment my-deployment`
