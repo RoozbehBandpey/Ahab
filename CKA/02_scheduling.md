@@ -414,3 +414,50 @@ For example you cannot edit the environment variables, service accounts, resourc
 With Deployments you can easily edit any field/property of the POD template. Since the pod template is a child of the deployment specification,  with every change the deployment will automatically delete and create a new pod with the new changes. So if you are asked to edit a property of a POD part of a deployment you may do that simply by running the command
 
 `kubectl edit deployment my-deployment`
+
+
+## DaemonSets
+
+DaemonSets are like ReplicaSets as in it helps you to deploy multiple instance of pods. But instead one copy of the pod on each node in the cluster. Whenever a new node is added to the cluster, a replica of the pod is automatically added to that node, and when the node is removed the pod is automatically removed. 
+
+Some use case of DaemonSets are:
+* For instance you would like to deploy a monitoring agent or log collector on each of the nodes in the cluster. In that case we don't have to worry about adding or removing monitoring agent from the nodes when there are changes.
+
+* Kube-proxy for instance is a pod required on each node 
+* For networking, solutions like `weave-net` requires an agent to be deployed on each node on the cluster. 
+
+Creating a DaemonSet is similar to ReplicaSet creation process
+
+```yml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: monitoring-daemon
+spec:
+  selector:
+    matchLabels:
+      app: monitoring-agent
+    template:
+      metadata:
+        labels:
+          app: monitoring-agent
+        spec:
+          containers:
+          - name: monitoring-agent
+            image: monitoring-agent
+```
+
+Ensure the labels in the pod selector matched the one in the DaemonSet.
+
+```bash
+kubectl create -f daemon-set-definition.yaml
+```
+
+To view DaemonSet
+
+```bash
+kubectl get daemonsets
+```
+
+As we could set the nodename property on the pod to bypass scheduler and get the pod placed on a node directly. From kubernetes version 1.12 onwards DaemonSet uses default scheduler and node affinity rules to schedule pods on nodes. 
+
