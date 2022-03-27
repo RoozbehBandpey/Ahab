@@ -73,14 +73,41 @@ To specify a command to start a container:
     * Then build our own image `docker build -t ubuntu-sleeper .`
     * Then we run it `docker run ubuntu-sleeper`
     * If we want to change the sleep time we have to run `docker run ubuntu-sleeper sleep 5`
-    * But a better way is entry point instructions, which it'll specify the program ehn the container runs `ENTRYPOINT ["sleep"]` what ever we specify in commandline will be appended to entry point so we can simply say `docker run ubuntu-sleeper 10`
+    * But a better way is entry point instructions, which it'll specify the program ehn the container runs `ENTRYPOINT ["sleep"]` what ever we specify in command-line will be appended to entry point so we can simply say `docker run ubuntu-sleeper 10`
     * In order to prevent error for cases like `docker run ubuntu-sleeper` we have to define a default value for command parameter we can use both entry point and command section in this case the command will be appended to the entry point instruction `ENTRYPOINT ["sleep"] CMD["5"`
     * To modify the entry point during the runtime we can run `docker run --entrypoint sleep2.0 ubuntu-sleeper 10`
 
 
 ### Commands and Arguments
+Now let's create a pod using the sleeper image:
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ubuntu-sleeper-pod
+spec:
+  containers:
+  - name: ubuntu-sleeper
+    image: ubuntu-sleeper
+```
+When this pod is created, it'll create a container form a specified image, the container sleeps for 5 seconds and exits.
 
+If we need to change the sleep parameter, anything that is appended in the docker run command will go to the args property of pod definition file, in form of an array.
 
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ubuntu-sleeper-pod
+spec:
+  containers:
+  - name: ubuntu-sleeper
+    image: ubuntu-sleeper
+    command: ["sleep2.0"]
+    args: ["10"]
+```
+
+If we need to modify the entrypoint command to a new command, we use the command filed, this will correspond to `ENTRYPOINT` in the dockerfile. 
 ### Environment Variables
 
 ### ConfigMaps
