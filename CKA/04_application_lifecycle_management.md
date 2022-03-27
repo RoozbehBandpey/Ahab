@@ -48,3 +48,43 @@ If there's something wrong and we would like to rollback to the older version. R
 kubectl rollout undo deployment/myapp-deployment
 ```
 
+## Configure Applications
+Configuring applications comprises of understanding the following concepts:
+
+* Configuring Command and Arguments on applications
+
+* Configuring Environment Variables
+
+* Configuring Secrets
+### Commands
+Imagine we were to run a docker container from an ubuntu image, when we run `docker run ubuntu` it runs an instance of ubuntu image and exists immediately. If we list running the container `docker ps` we won't see anything, if we list running container and including those that stopped `docker ps -a` we can see the container. 
+
+There reason that ubuntu stops, is that unlike virtual machines, containers are not meant to host an operating system. They are rather meant to run a specific task or process. Once the task is complete the container exits. Containers only live as long as the process inside it is alive.
+
+If we look at the dockerfile for popular docker images, we'll see an instruction in CMD section that defines the process to be run within the container when it starts. `CMD ["nginx"]`, `CMD ["mysqld"]` but for ubuntu this command is `CMD ["bash"]` bash is not really a process like a webserver or database server, it is a shell that listens for the input from the terminal, if it cannot find the terminal, it exits! By default docker does not attach a terminal to container when it is ran. 
+
+To specify a command to start a container:
+1. Append a command to docker run command, that way it'll overwrite the command specified within the image. 
+    * `docker run ubuntu [COMMAND]`, for example `docker run ubuntu sleep 5`
+    * This way when the container starts it'll run the ubuntu and wait 5 seconds and then it terminates
+2. We create our own image from the base ubuntu image and specify the command `CMD sleep 5`
+    * Either in shell form `CMD command param1`
+    * Or in json array format `CMD ["command", "param1"]`
+    * Then build our own image `docker build -t ubuntu-sleeper .`
+    * Then we run it `docker run ubuntu-sleeper`
+    * If we want to change the sleep time we have to run `docker run ubuntu-sleeper sleep 5`
+    * But a better way is entry point instructions, which it'll specify the program ehn the container runs `ENTRYPOINT ["sleep"]` what ever we specify in commandline will be appended to entry point so we can simply say `docker run ubuntu-sleeper 10`
+    * In order to prevent error for cases like `docker run ubuntu-sleeper` we have to define a default value for command parameter we can use both entry point and command section in this case the command will be appended to the entry point instruction `ENTRYPOINT ["sleep"] CMD["5"`
+    * To modify the entry point during the runtime we can run `docker run --entrypoint sleep2.0 ubuntu-sleeper 10`
+
+
+### Commands and Arguments
+
+
+### Environment Variables
+
+### ConfigMaps
+
+### Secrets
+
+## Scale Applications
