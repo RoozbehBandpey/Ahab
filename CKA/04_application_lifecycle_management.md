@@ -109,7 +109,25 @@ spec:
 
 If we need to modify the entrypoint command to a new command, we use the command filed, this will correspond to `ENTRYPOINT` in the dockerfile. 
 ### Environment Variables
+To set an environment variable in docker we ca simply say `docker run -e APP_COLOR=pink simple-webapp-color`. 
 
+In kubernetes while defining a pod in its manifest file we can use the env property to set environment variables:
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: simple-webapp-color
+spec:
+  containers:
+  - name: simple-webapp-color
+    image: simple-webapp-color
+    ports:
+      - containerPort: 8080
+    env:
+      - name: APP_COLOR
+        value: pink
+```
+`env` is an array, each item has a name and value property.
 ### ConfigMaps
 
 ### Secrets
