@@ -298,3 +298,64 @@ Having said that, there are other better ways of handling sensitive data like pa
 
 
 ## Scale Applications
+
+
+Practice Test - Secrets
+Practice Test: https://uklabs.kodekloud.com/topic/practice-test-secrets-2/
+
+Course content
+87. Application Lifecycle Management - Section Introduction
+1min
+88. Download Slide Deck
+1min
+89. Rolling Updates and Rollbacks
+7min
+90. Practice Test - Rolling Updates and Rollbacks
+0min
+91. Solution: Rolling update : (Optional)
+8min
+92. Configure Applications
+1min
+93. Commands
+7min
+94. Commands and Arguments
+3min
+95. Practice Test - Commands and Arguments
+0min
+96. Solution - Commands and Arguments (Optional)
+11min
+97. Configure Environment Variables in Applications
+1min
+98. Configuring ConfigMaps in Applications
+5min
+99. Practice Test: Environment Variables
+0min
+100. Solution - Environment Variables (Optional)
+9min
+101. Configure Secrets in Applications
+6min
+102. A note about Secrets!
+1min
+103. Practice Test - Secrets
+0min
+104. Solution - Secrets (Optional)
+10min
+105. Scale Applications
+1min
+106. Multi Container PODs
+2min
+107. Practice Test - Multi Container PODs
+1min
+108. Solution - Multi-Container Pods (Optional)
+10min
+109. Multi-container PODs Design Patterns
+1min
+110. InitContainers
+2min
+111. Practice Test - Init Containers
+1min
+112. Solution - Init Containers (Optional)
+8min
+113. Self Healing Applications
+1min
+114. If you like it, Share it!
