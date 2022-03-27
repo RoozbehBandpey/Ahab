@@ -16,3 +16,12 @@ Kubernetes does not come with full feature built-in monitoring solution, but the
 * DataDog
 * Dynatrace
 
+## Managing Application Logs
+
+Let's say we have a docker container that simulates logging, all it does is to generate a random events simulating a web server. If we want to run the container in the background in the detach mode `docker run -d event-simulator` we wouldn't see the logs. For viewing the logs we have to run `docker logs -f <container-id>`. `-f` is for seeing the live log trails. 
+
+Now we create a pod in kubernetes using the same container inside pod definition file. Once the pod is running we can view the logs using `kubectl logs -f <pod-name>`.
+
+If we have a multi-container pod, we must specify the name of container in the command `kubectl logs -f <pod-name> <container-name>` otherwise it'll fail.
+
+
