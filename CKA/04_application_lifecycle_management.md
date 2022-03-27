@@ -193,5 +193,85 @@ spec:
             key: APP_COLOR
 ```
 ### Secrets
+Secrets are used to store sensitive information like passwords or keys. They are similar to ConfigMaps except that they are stored in encoded format. 
+
+Secrets can be created with imperative and declarative ways.
+* `kubectl create secret generic`
+    * `kubectl create secret generic <secret-name> --from-literal=<key>=<value>`
+    * `kubectl create secret generic app-secret --from-literal=DB_Host=mysql`
+    * For more values we can specify the `--from-literal` option multiple times
+    * Or we can use a config file: `kubectl create secret generic <secret-name> --from-file=<path-to-file>`
+    * `kubectl create secret generic app-secret --from-file=app_secret.properties`
+* `kubectl create -f <secret-file>`
+    * We create a definition file same as any other object but instead of `spec` we have `data`
+    * Create by running `kubectl create -f secret.yaml`
+```yml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secret
+data:
+  DB_Host: mysql
+  DB_User: root
+  DB_Password: password
+```
+
+However the secrets created from manifest files does not seem to be really secure, because they are stored in YAML format. When we create the secrets with manifest files we must specify the data un the hashed format. 
+
+In order to convert the data to encode format, on the linus host run
+```bash
+echo -n 'mysql' | base64
+echo -n 'root' | base64
+echo -n 'password' | base64
+```
+
+To view secrets run
+
+```bash
+kubectl get secrets
+```
+
+To get more details run
+```bash
+kubectl describe secrets
+```
+
+To view the secret values, run
+```bash
+kubectl get secrets app-secret -o yaml
+```
+
+In order to decode the hashed values run the following:
+
+```bash
+echo -n 'bX3k4jhb' | base64 --decode
+echo -n 'jh354HHGD' | base64 --decode
+echo -n '45Ghjhgr4' | base64 --decode
+```
+
+To configure a pod to use Secret we can use `envFrom`, this property is a list so we can pass as many secrets as required. Each value corresponds to a Secret item. 
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: simple-webapp-color
+spec:
+  containers:
+  - name: simple-webapp-color
+    image: simple-webapp-color
+    ports:
+      - containerPort: 8080
+    envFrom:
+      - secretRef:
+          name: app-secret
+```
+
+The secrets will be accessible as environment variables within the application. There are other ways to inject secrets into pods, such as single environment variables or inject the whole secret as files in a volume. 
+
+If we were to mount the secret as a file into the volume, each attribute in the secret is created as a file with the value of the secret as its content.
+
+
+
+
 
 ## Scale Applications

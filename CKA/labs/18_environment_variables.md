@@ -99,3 +99,9 @@ pod "webapp-color" deleted
 kubectl apply -f web-app.yaml 
 pod/webapp-color created
 ```
+
+A nice way to explore pods:
+
+```bash
+kubectl explain pods --recursive | grep envFrom -A3
+```
