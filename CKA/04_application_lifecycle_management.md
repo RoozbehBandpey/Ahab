@@ -129,7 +129,69 @@ spec:
 ```
 `env` is an array, each item has a name and value property.
 ### ConfigMaps
+When we have a lot of pods it'll become difficult to manage environment data. We can take this information out of the pod definition file and manage it centrally using configuration maps. ConfigMaps are used to store configuration data in form of key-value pairs. When the pod is created inject the config map into the pod so the key-value pairs are available as environment variables for the applications hosted in the pods. 
 
+ConfigMaps can be created with imperative and declarative ways.
+* `kubectl create configmap`
+    * `kubectl create configmap <config-name> --from-literal=<key>=<value>`
+    * `kubectl create configmap app-config --from-literal=APP_COLOR=blue`
+    * For more values we can specify the `--from-literal` option multiple times
+    * Or we can use a config file: `kubectl create configmap <config-name> --from-file=<path-to-file>`
+    * `kubectl create configmap app-config --from-file=app_config.properties`
+* `kubectl create -f <config-map-file>`
+    * We create a definition file same as any other object but instead of `spec` we have `data`
+    * Create by running `kubectl create -f config-map.yaml`
+```yml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  APP_COLOR: blue
+  APP_MODE: prod
+```
+
+ConfigMaps can be viewed by:
+
+```bash
+kubectl get configmap
+```
+
+To configure a pod to use ConfigMap we can use `envFrom`, this property is a list so we can pass as many environment variables as required. Each value corresponds to a ConfigMap item. 
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: simple-webapp-color
+spec:
+  containers:
+  - name: simple-webapp-color
+    image: simple-webapp-color
+    ports:
+      - containerPort: 8080
+    envFrom:
+      - configMapRef:
+          name: app-config
+```
+ConfigMap can also be passed to pod with `valueFrom` property.
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: simple-webapp-color
+spec:
+  containers:
+  - name: simple-webapp-color
+    image: simple-webapp-color
+    ports:
+      - containerPort: 8080
+    env:
+      - name: APP_COLOR
+        valueFrom:
+          configMapKeyRef:
+            name: app-config
+            key: APP_COLOR
+```
 ### Secrets
 
 ## Scale Applications
