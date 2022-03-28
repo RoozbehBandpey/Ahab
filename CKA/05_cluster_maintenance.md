@@ -32,6 +32,13 @@ kubectl cordon node-1
 
 ## Kubernetes Software Versions
 
+When we install kubernetes cluster, we install a specific version of kubernetes, we will see the versions when we run `kubectl get nodes` command. 
+
+The kubernetes release versions consist of three parts, vMAJOR.MINOR.PATCH, while minor versions are released every few month with new features and functionalities. Patches are more frequent which include bug fixes. 
+
+Kubernetes follows a standard software release approach, The first major release v1.0 was released on July 2015. Apart from stable releases we will see alpha nad beta releases, all the bugfixes and improvements first goes to alpha release vX.Y.X-alpha, in this release the features are disabled and buggy. And from there they make their way to beta release v.X.Y.Z-beta were it becomes tested and new features become enabled by default and finally they make their way to main stable release.
+
+
 
 
 ## Cluster Upgrade Process
