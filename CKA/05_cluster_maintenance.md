@@ -156,5 +156,62 @@ kubectl uncordon node-1
 The node is now schedulable but not necessarily pods will come back on the node, only when those pods are deleted form the other pods or the new pods are scheduled they will come back on this node. When we take down the second node the workload will be back here.
 
 ## Backup and Restore Methods
+Resource configuration, ETCD cluster and persistent volumes are best candidates for backups. 
 
+For resources at time we use imperative way by running a command, and sometimes we use declarative approach by creating a manifest file. For storing the configurations the declarative way is the preferred approach. A good practice is to store those in a source code repository for version tracking and collaborative work.
+
+What if someone created an object in the imperative way without documenting it anywhere? A better approach to back up the resource configuration is to query the kube-apiserver. 
+
+For example all the configurations can be exported with:
+```bash
+kubectl get all --all-namespace -o yaml > all-deploy-services.yaml
+```
+
+There are tools like VELERO which can also help with backups.
+
+The ETCD stores information about the state of our cluster, so instead of backing up resources we may choose to back up ETCD cluster itself. While configuring ETCD we specify a location where all the data will be stored `--data-dir` that is the directory that cab be backed up with the backup tool. ETCD also come with a built-in snapshot solution, we can take a snapshot of the ETCD database by using:
+
+```bash
+ETCDCTL_API=3 etcdctl snapshot save snapshot.db
+```
+We can view the status of the backup using the:
+
+```bash
+ETCDCTL_API=3 etcdctl snapshot status snapshot.db
+```
+To restore this backup at a later point in time, first stop the kube-apiserver
+
+```bash
+service kube-apiserver stop
+```
+The restore using
+```bash
+ETCDCTL_API=3 etcdctl snapshot restore snapshot.db --data-dir /var/lib/etcd-from-backup
+```
+
+When ETCD restores, it initializes a new cluster configuration, and configures the members of ETCD as new members to a new cluster. This is to prevent a new members to accidentally joining the cluster. On running this command a new data directory is created for example at location of `/var/lib/etcd-from-backup` we then configure the ETCD configuration to use the new data directory. The reload the service daemon:
+
+```bash
+systemctl daemon-reload
+```
+And restart the ETCD service
+```bash
+service etcd restart
+```
+
+Finally we start the kube-apiserver
+```bash
+service kube-apiserver start
+```
+
+> With all etcd command specify the certificate files for authentication, the etcd cluster endpoint, the key and the CA certificate
+
+```bash
+ETCDCTL_API3 etcdctl \
+    snapshot save snapshot.db \
+    --endpoint=https://127.0.0.1:2379 \
+    --cacert=/etc/etcd/ca.crt \
+    --cert=/etc/etcd/etcd-server.crt \
+    --key=/etc/etcd/etcd-server.key
+```
 ## Working with ETCDCTL
