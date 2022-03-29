@@ -156,49 +156,59 @@ Once created, you may authenticate into the kube-api server using the users cred
 ```bash
 curl -v -k https://localhost:6443/api/v1/pods -u "user1:password123"
 ```
-## TLS Introduction
+## TLS Basics
+A certificate is used to guarantee trust between two parties during a transaction. For example when a user tries to access a webserver, TLS certificate ensures that the communication between the user and the server is encrypted and the server is who it says it is. 
 
-# TLS Basics
+Without secure connectivity, a user trying to access his/her bank account the credentials they enter in the portal would be send in the plain text. The hackers sniffing into the traffic could easily retrieve the credentials and log into user's bank account. So we must encrypt the data being transferred using encryption keys. Now data is encrypted so the hacker won't be able to do anything with the data, but the server as well cannot do anything with the data without encryption key. So a copy of the key must also be send to the server, since the key is also send using the same network it can be compromised and used to decrypt the data. This is known as symmetric encryption. 
 
-# TLS in Kubernetes
+That's where asymmetric encryption comes in, instead of using a single key to encrypt and decrypt data, this method uses a pair of keys a private key and a public key. The public key is more of a public lock. The trick is if you encrypt your data with the lock you can only unlock it with the associated key. 
 
-# TLS in Kubernetes - Certificate Creation
+For example when you have a server in your environment that you need to access to, and you don't want to use passwords as  they are too ricky. So you decide to use key-pairs, you generate a public a private key-pair. 
 
-# View Certificate Details
+```bash
+ssh-keygen
+```
 
-# Resource: Download Kubernetes Certificate Health Check Spreadsheet
+It generates two files, `id_rsa` is the private key and `id_rsa.pub` is the public key. Then we secure the server by locking down all access to it, except through a door that is locked using public key. It is usually done by adding an entry with your public key in the server's authorized keys file `cat ./.ssh/authorized_keys` The lock is public and anyone can attempt to break through. When we try to ssh, we specify the location of our private key in our command. For multiple servers we can make a copies of  the public key and place then on as many servers as possible. 
+## TLS in Kubernetes
 
+## TLS in Kubernetes - Certificate Creation
 
-# Certificates API
+## View Certificate Details
 
-
-# KubeConfig
-
-
-# Persistent Key/Value Store
-
-# API Groups
-
-# Authorization
-
-# Role Based Access Controls
+## Resource: Download Kubernetes Certificate Health Check Spreadsheet
 
 
-# Cluster Roles and Role Bindings
+## Certificates API
 
 
-# Service Accounts
+## KubeConfig
 
 
-# Image Security
+## Persistent Key/Value Store
+
+## API Groups
+
+## Authorization
+
+## Role Based Access Controls
 
 
-# Security Contexts
+## Cluster Roles and Role Bindings
 
 
-# Network Policy
-
-# Developing network policies
+## Service Accounts
 
 
-# Solution - Network Policies (optional)
+## Image Security
+
+
+## Security Contexts
+
+
+## Network Policy
+
+## Developing network policies
+
+
+## Solution - Network Policies (optional)
