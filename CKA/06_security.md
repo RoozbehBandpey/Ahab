@@ -206,11 +206,46 @@ We can differentiate users by adding group detail while creating the csr
 openssl req -new -key admin.key -subj "/CN=kube-admin/O=system:masters" -out admin.csr
 ```
 ## View Certificate Details
+Performing health check on certificates:
 
-## Resource: Download Kubernetes Certificate Health Check Spreadsheet
+If thee cluster was setup from scratch, you generate all the certificates by yourself, 
+```bash
+cat /etc/systemd/system/kube-apiserver.service
+```
 
+
+Kubeadm takes care of generating the certificates
+```bash
+cat /rtc/kubernetes/manifests/kube-apiserver.yaml
+```
 
 ## Certificates API
+
+A user first creates a key
+```bash
+openssl genrsa -out roozbeh.key 2048
+```
+Then creates a csr using the key with the name on it
+```bash
+openssl req -new -key roozbeh.key -subj "/CN=roozbeh" -out roozbeh.csr
+```
+
+Then sends the request to the administrator, the admin takes the key and creates a csr object. The admin won't place the csr as plain text in request section on CSR manifest file, instead encodes it with base64
+
+```bash
+cat roozbeh.csr | base64
+```
+Then move the encoded request in the request filed and submit the request. 
+
+Once object is created the admin can view all CSRs
+
+```bash
+kubectl get csr
+```
+ Approve the request by running
+```bash
+kubectl certificate approve roozbeh
+```
 
 
 ## KubeConfig
