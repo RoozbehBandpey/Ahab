@@ -169,11 +169,42 @@ For example when you have a server in your environment that you need to access t
 ssh-keygen
 ```
 
-It generates two files, `id_rsa` is the private key and `id_rsa.pub` is the public key. Then we secure the server by locking down all access to it, except through a door that is locked using public key. It is usually done by adding an entry with your public key in the server's authorized keys file `cat ./.ssh/authorized_keys` The lock is public and anyone can attempt to break through. When we try to ssh, we specify the location of our private key in our command. For multiple servers we can make a copies of  the public key and place then on as many servers as possible. 
+It generates two files, `id_rsa` is the private key and `id_rsa.pub` is the public key. Then we secure the server by locking down all access to it, except through a door that is locked using public key. It is usually done by adding an entry with your public key in the server's authorized keys file `cat ./.ssh/authorized_keys` The lock is public and anyone can attempt to break through. When we try to ssh, we specify the location of our private key in our command. For multiple servers we can make a copies of  the public key and place then on as many servers as possible. TODO
 ## TLS in Kubernetes
 
 ## TLS in Kubernetes - Certificate Creation
+Generate private key with openssl
+### Generating Certificates
+```bash
+openssl genrsa -out ca.key 2048 
+```
 
+Generate a certificate signing request
+```bash
+openssl req -new -key ca.key -subj "/CN=KUBERNETES-CA" -out ca.csr
+```
+Sign the request
+```bash
+openssl x509 -req -in ca.csr -signkey ca.key -out ca.crt
+```
+### Generating Client Certificates
+```bash
+openssl genrsa -out admin.key 2048 
+```
+
+Generate a certificate signing request
+```bash
+openssl req -new -key admin.key -subj "/CN=kube-admin" -out admin.csr
+```
+Sign the request with specifying the ca certificate and ca key
+```bash
+openssl x509 -req -in admin.csr -CA ca.crt -CAkey ca.key -out admin.crt
+```
+
+We can differentiate users by adding group detail while creating the csr
+```bash
+openssl req -new -key admin.key -subj "/CN=kube-admin/O=system:masters" -out admin.csr
+```
 ## View Certificate Details
 
 ## Resource: Download Kubernetes Certificate Health Check Spreadsheet
