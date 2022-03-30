@@ -249,7 +249,7 @@ kubectl certificate approve roozbeh
 
 
 ## KubeConfig
-
+kubectl config view
 
 ## Persistent Key/Value Store
 
