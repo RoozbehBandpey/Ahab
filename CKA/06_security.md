@@ -374,6 +374,50 @@ rolebinding.rbac.authorization.k8s.io/dev-user-role-binding created
 
 
 ## Cluster Roles and Role Bindings
+How many ClusterRoles do you see defined in the cluster?
+
+
+kubectl get clusterroles --no-headers | wc -l
+69
+
+kubectl get clusterroles --no-headers -o json | jq '.items | length'
+
+kubectl get clusterrolebindings --no-headers | wc -l
+54
+
+A new user michelle joined the team. She will be focusing on the nodes in the cluster. Create the required ClusterRoles and ClusterRoleBindings so she gets access to the nodes.
+
+kubectl create clusterrole michelle --verb=get,watch,list,create,delete --resource=nodes
+clusterrole.rbac.authorization.k8s.io/michelle created
+
+kubectl create clusterrolebinding michelle-binding --clusterrole=michelle --user=michelleclusterrolebinding.rbac.authorization.k8s.io/michelle-binding created
+
+
+michelle's responsibilities are growing and now she will be responsible for storage as well. Create the required ClusterRoles and ClusterRoleBindings to allow her access to Storage.
+
+
+
+Get the API groups and resource names from command kubectl api-resources. Use the given spec:
+
+ClusterRole: storage-admin
+Resource: persistentvolumes
+Resource: storageclasses
+ClusterRoleBinding: michelle-storage-admin
+ClusterRoleBinding Subject: michelle
+ClusterRoleBinding Role: storage-admin
+
+kubectl auth can-i list storageclasses --as michelle
+
+
+kubectl create clusterrole storage-admin --verb=get,watch,list,create,delete --resource=storageclasses
+clusterrole.rbac.authorization.k8s.io/storage-admin created
+
+controlplane ~ ➜  kubectl create clusterrolebinding michelle-storage-binding --clusterrole=storage-admin --user=michelle
+clusterrolebinding.rbac.authorization.k8s.io/michelle-storage-binding created
+
+kubectl auth can-i list storageclasses --as michelle
+Warning: resource 'storageclasses' is not namespace scoped in group 'storage.k8s.io'
+yes
 
 
 ## Service Accounts
