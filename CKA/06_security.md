@@ -256,7 +256,120 @@ kubectl config view
 ## API Groups
 
 ## Authorization
+Inspect the environment and identify the authorization modes configured on the cluster.
 
+
+
+Check the kube-apiserver settings.
+
+cat /etc/kubernetes/manifests/kube-apiserver.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    kubeadm.kubernetes.io/kube-apiserver.advertise-address.endpoint: 10.12.220.3:6443
+  creationTimestamp: null
+  labels:
+    component: kube-apiserver
+    tier: control-plane
+  name: kube-apiserver
+  namespace: kube-system
+spec:
+  containers:
+  - command:
+    - kube-apiserver
+    - --advertise-address=10.12.220.3
+    - --allow-privileged=true
+    - --authorization-mode=Node,RBAC
+
+Use the command kubectl describe pod kube-apiserver-controlplane -n kube-system and look for --authorization-mode.
+
+kubectl describe pod kube-apiserver-controlplane -n kube-system  | grep authorization-mode
+      --authorization-mode=Node,RBAC
+
+How many roles exist in the default namespace?
+
+kubectl get roles
+
+How many roles exist in all namespaces together?
+
+kubectl get roles -A --no-headers | wc -l
+12
+
+What are the resources the kube-proxy role in the kube-system namespace is given access to?
+
+kubectl describe roles kube-proxy -n kube-system
+Name:         kube-proxy
+Labels:       <none>
+Annotations:  <none>
+PolicyRule:
+  Resources   Non-Resource URLs  Resource Names  Verbs
+  ---------   -----------------  --------------  -----
+  configmaps  []                 [kube-proxy]    [get]
+
+Which account is the kube-proxy role assigned to it?
+
+kubectl describe rolebindings kube-proxy -n kube-system
+Name:         kube-proxy
+Labels:       <none>
+Annotations:  <none>
+Role:
+  Kind:  Role
+  Name:  kube-proxy
+Subjects:
+  Kind   Name                                             Namespace
+  ----   ----                                             ---------
+  Group  system:bootstrappers:kubeadm:default-node-token  
+
+A user dev-user is created. User's details have been added to the kubeconfig file. Inspect the permissions granted to the user. Check if the user can list pods in the default namespace.
+
+
+
+Use the --as dev-user option with kubectl to run commands as the dev-user.
+
+kubectl get pods --as dev-user
+Error from server (Forbidden): pods is forbidden: User "dev-user" cannot list resource "pods" in API group "" in the namespace "default"
+
+Create the necessary roles and role bindings required for the dev-user to create, list and delete pods in the default namespace.
+
+
+
+Use the given spec:
+
+
+* Role: developer
+* Role Resources: pods
+* Role Actions: list
+* Role Actions: create
+* Role Actions: delete
+* RoleBinding: dev-user-binding
+* RoleBinding: Bound to dev-user
+
+To create a Role:- kubectl create role developer --namespace=default --verb=list,create,delete --resource=pods
+To create a RoleBinding:- kubectl create rolebinding dev-user-binding --namespace=default --role=developer --user=dev-user
+
+
+The dev-user is trying to get details about the dark-blue-app pod in the blue namespace. Investigate and fix the issue.
+
+
+
+We have created the required roles and rolebindings, but something seems to be wrong.
+
+Run the command: kubectl edit role developer -n blue and correct the resourceNames field. You don't have to delete the role.
+
+Grant the dev-user permissions to create deployments in the blue namespace.
+
+
+
+Remember to add for api group "apps".
+
+kubectl create role dev-user-role --namespace=blue --verb=create  --resource=deploymentsrole.rbac.authorization.k8s.io/dev-user-role created
+root@controlplane:~# kubectl edit role dev-user-role
+Error from server (NotFound): roles.rbac.authorization.k8s.io "dev-user-role" not found
+root@controlplane:~# kubectl edit role dev-user-role -n blue
+Edit cancelled, no changes made.
+root@controlplane:~# kubectl create rolebinding dev-user-role-binding --namespace=blue --role=dev-user-role --user=dev-user
+rolebinding.rbac.authorization.k8s.io/dev-user-role-binding created
 ## Role Based Access Controls
 
 
