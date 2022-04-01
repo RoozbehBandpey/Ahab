@@ -421,12 +421,261 @@ yes
 
 
 ## Service Accounts
+How many Service Accounts exist in the default namespace?
+
+kubectl get serviceaccounts
+NAME      SECRETS   AGE
+default   1         17m
+
+What is the secret token used by the default service account?
+
+kubectl describe serviceaccount default
+Name:                default
+Namespace:           default
+Labels:              <none>
+Annotations:         <none>
+Image pull secrets:  <none>
+Mountable secrets:   default-token-snlkt
+Tokens:              default-token-snlkt
+
+nspect the deployment. What is the image used by the deployment?
+
+kubectl describe deployment web-dashboard | grep Image
+    Image:      gcr.io/kodekloud/customimage/my-kubernetes-dashboard
+
+Inspect the Dashboard Application POD and identify the Service Account mounted on it.
+
+At what location is the ServiceAccount credentials available within the pod?
+ubectl describe pod web-dashboard-5899cf7849-hphq2 | grep account
+      /var/run/secrets/kubernetes.io/serviceaccount from default-token-snlkt (ro)
+
+The application needs a ServiceAccount with the Right permissions to be created to authenticate to Kubernetes. The 'default' ServiceAccount has limited access. Create a new ServiceAccount named 'dashboard-sa'.
+
+
+kubectl create serviceaccount dashboard-sa
+serviceaccount/dashboard-sa created
+
+Enter the access token in the UI of the dashboard application. Click Load Dashboard button to load Dashboard
+
+
+
+Retrieve the Authorization token for the newly created service account , copy it and paste it into the token field of the UI.
+
+To do this, run kubectl describe against the secret created for the dashboard-sa service account, copy the token and paste it in the UI.
+
+kubectl describe serviceaccount dashboard-sa
+Name:                dashboard-sa
+Namespace:           default
+Labels:              <none>
+Annotations:         <none>
+Image pull secrets:  <none>
+Mountable secrets:   dashboard-sa-token-wjm69
+Tokens:              dashboard-sa-token-wjm69
+Events:              <none>
+root@controlplane:/# kubectl describe secret dashboard-sa-token-wjm69
+Name:         dashboard-sa-token-wjm69
+Namespace:    default
+Labels:       <none>
+Annotations:  kubernetes.io/service-account.name: dashboard-sa
+              kubernetes.io/service-account.uid: 51fb81b5-3779-400b-8a3d-58308d1dfb5a
+
+Type:  kubernetes.io/service-account-token
+
+Data
+====
+token:      eyJhbGciOiJSUzI1NiIsImtpZCI6Inp3WHhoZFp6alJSMlJJNGFrQlg1azE4RmpXUW9xSmlBa1pYd0xrTnRLYlUifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJkZWZhdWx0Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6ImRhc2hib2FyZC1zYS10b2tlbi13am02OSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJkYXNoYm9hcmQtc2EiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiI1MWZiODFiNS0zNzc5LTQwMGItOGEzZC01ODMwOGQxZGZiNWEiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6ZGVmYXVsdDpkYXNoYm9hcmQtc2EifQ.OlrmT_7QIT1n08XjSuf9aMvlKGjoDfgIrAn0gJPSphylwQZtN9C723G6i_PQI0cuziI9j8mKwkO8lR3uh0QLIZhyfOGFcp1aP2u_xIcucVTGty9SdIdvVJhNUTEHAO4c72Q6AiQFIJzfzvV5Z3dkV9M_PbyHNTRNYptFPeedueJOYkCp6wYwrAERva7OzsFBT34u-q5eD5_2N8hq1tFjPR0TDz3TmG5JtFfOYDsIIIx7CiD6GCF9Dypu8nyRfNx7v9gg-8r_iK5PyrM03u7CmdMvSm-jPdlXm4dsv8wemxqtdhBbqDMFaGmgZsAILOD2R3fZwBlAIoBthhDJKGVr1w
+ca.crt:     1066 bytes
+namespace:  7 bytes
+
+You shouldn't have to copy and paste the token each time. The Dashboard application is programmed to read token from the secret mount location. However currently, the 'default' service account is mounted. Update the deployment to use the newly created ServiceAccount
+
+
+
+Edit the deployment to change ServiceAccount from 'default' to 'dashboard-sa'
+
+
+Use the serviceAccountName field inside the pod spec.
+
+Use following YAML file:
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-dashboard
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: web-dashboard
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        name: web-dashboard
+    spec:
+      serviceAccountName: dashboard-sa
+      containers:
+      - image: gcr.io/kodekloud/customimage/my-kubernetes-dashboard
+        imagePullPolicy: Always
+        name: web-dashboard
+        ports:
+        - containerPort: 8080
+          protocol: TCP                          
+
+Refresh the Dashboard application UI and you should now see the PODs listed automatically.
+
+
+
+This time you shouldn't have to put in the token manually.
+
+
 
 
 ## Image Security
+What is the secret type we choose for the docker registry?
 
+kubectl create secret --help
+
+We have an application running on our cluster. Let us explore it first. What image is the application using?
+
+
+kubectl get pods
+NAME                  READY   STATUS    RESTARTS   AGE
+web-bd975bd87-4gpn6   1/1     Running   0          74s
+web-bd975bd87-zqmx2   1/1     Running   0          74s
+root@controlplane:/# kubectl describe pod web-bd975bd87-zqmx2 | grep Image
+    Image:          nginx:alpine
+    Image ID:       docker-pullable://nginx@sha256:44e208ac2000daeff77c27a409d1794d6bbdf52067de627c2da13e36c7d59582
+root@controlplane:/# 
+
+We decided to use a modified version of the application from an internal private registry. Update the image of the deployment to use a new image from myprivateregistry.com:5000
+
+
+
+The registry is located at myprivateregistry.com:5000. Don't worry about the credentials for now. We will configure them in the upcoming steps.
+
+
+kubectl edit deployment web
+
+Create a secret object with the credentials required to access the registry.
+
+
+
+Name: private-reg-cred
+Username: dock_user
+Password: dock_password
+Server: myprivateregistry.com:5000
+Email: dock_user@myprivateregistry.com
+
+
+kubectl create secret docker-registry private-reg-cred --docker-username=dock_user --docker-password=dock_password --docker-server=myprivateregistry.com:5000 --docker-email=dock_user@myprivateregistry.com
+secret/private-reg-cred created
+
+
+Configure the deployment to use credentials from the new secret to pull images from the private registry
+
+spec:
+  containers:
+    - name: foo
+      image: janedoe/awesomeapp:v1
+  imagePullSecrets:
+    - name: myregistrykey
 
 ## Security Contexts
+
+What is the user used to execute the sleep process within the ubuntu-sleeper pod?
+
+
+
+In the current(default) namespace.
+kubectl exec ubuntu-sleeper -- whoami
+root
+
+
+kubectl get pods
+NAME             READY   STATUS    RESTARTS   AGE
+ubuntu-sleeper   1/1     Running   0          115s
+
+controlplane ~ ➜  kubectl get pods ubuntu-sleeper -o yaml > ubuntu-sleeper.yaml
+
+controlplane ~ ➜  kubectl delete pods ubuntu-sleeper
+pod "ubuntu-sleeper" deleted
+
+
+
+A Pod definition file named multi-pod.yaml is given. With what user are the processes in the web container started?
+
+
+
+The pod is created with multiple containers and security contexts defined at the Pod and Container level.
+
+cat multi-pod.yaml 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: multi-pod
+spec:
+  securityContext:
+    runAsUser: 1001
+  containers:
+  -  image: ubuntu
+     name: web
+     command: ["sleep", "5000"]
+     securityContext:
+      runAsUser: 1002
+
+  -  image: ubuntu
+     name: sidecar
+     command: ["sleep", "5000"]
+
+Update pod ubuntu-sleeper to run as Root user and with the SYS_TIME capability.
+
+
+
+Note: Only make the necessary changes. Do not modify the name of the pod.
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ubuntu-sleeper
+  namespace: default
+spec:
+  containers:
+  - command:
+    - sleep
+    - "4800"
+    image: ubuntu
+    name: ubuntu-sleeper
+    securityContext:
+      capabilities:
+        add: ["SYS_TIME"]
+
+Now update the pod to also make use of the NET_ADMIN capability.
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ubuntu-sleeper
+  namespace: default
+spec:
+  containers:
+  - command:
+    - sleep
+    - "4800"
+    image: ubuntu
+    name: ubuntu-sleeper
+    securityContext:
+      capabilities:
+        add: ["SYS_TIME", "NET_ADMIN"]
+
 
 
 ## Network Policy
