@@ -679,6 +679,55 @@ spec:
 
 
 ## Network Policy
+How many network policies do you see in the environment?
+
+
+
+We have deployed few web applications, services and network policies. Inspect the environment.
+
+
+Run the command: kubectl get networkpolicy or kubectl get netpol
+
+
+Which pod is the Network Policy applied on?
+
+Run the command: kubectl get networkpolicy and look under the Pod Selector column.
+After getting the labels, identify the correct pod name by their labels.
+Run the command: kubectl get po --show-labels | grep name=payroll
+
+What type of traffic is this Network Policy configured to handle?
+
+kubectl describe networkpolicy payroll-policy
+Name:         payroll-policy
+Namespace:    default
+Created on:   2022-04-01 19:46:18 +0000 UTC
+Labels:       <none>
+Annotations:  <none>
+Spec:
+  PodSelector:     name=payroll
+  Allowing ingress traffic:
+    To Port: 8080/TCP
+    From:
+      PodSelector: name=internal
+  Not affecting egress traffic
+  Policy Types: Ingress
+
+
+Create a network policy to allow traffic from the Internal application only to the payroll-service and db-service.
+
+
+
+Use the spec given on the below. You might want to enable ingress traffic to the pod to test your rules in the UI.
+
+
+* Policy Name: internal-policy
+* Policy Type: Egress
+* Egress Allow: payroll
+* Payroll Port: 8080
+* Egress Allow: mysql
+* MySQL Port: 3306
+
+
 
 ## Developing network policies
 
