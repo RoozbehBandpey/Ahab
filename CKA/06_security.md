@@ -7,7 +7,7 @@ All access to host must be secured, root access disabled, password based authent
 
 Our focus here is on kubernetes related security, what are the risks and what  are the measures  to be taken to secure the cluster.
 
-The first line of defence is kube-apiserver, as we do everything on the cluster via kube-apiserver. We need to make two type of decision 1. Who can access the cluster? 2. What can they do?
+The first line of defense is kube-apiserver, as we do everything on the cluster via kube-apiserver. We need to make two type of decision 1. Who can access the cluster? 2. What can they do?
 
 Who can access the kube-apiserver is defined by the authentication mechanisms:
 * Files - Usernames and Passwords
