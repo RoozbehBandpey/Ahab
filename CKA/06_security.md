@@ -169,7 +169,7 @@ For example when you have a server in your environment that you need to access t
 ssh-keygen
 ```
 
-It generates two files, `id_rsa` is the private key and `id_rsa.pub` is the public key. Then we secure the server by locking down all access to it, except through a door that is locked using public key. It is usually done by adding an entry with your public key in the server's authorized keys file `cat ./.ssh/authorized_keys` The lock is public and anyone can attempt to break through. When we try to ssh, we specify the location of our private key in our command. For multiple servers we can make a copies of  the public key and place then on as many servers as possible. TODO
+It generates two files, `id_rsa` is the private key and `id_rsa.pub` is the public key. Then we secure the server by locking down all access to it, except through a door that is locked using public key. It is usually done by adding an entry with your public key in the server's authorized keys file `cat ./.ssh/authorized_keys` The lock is public and anyone can attempt to break through. When we try to ssh, we specify the location of our private key in our command. For multiple servers we can make a copies of the public key and place then on as many servers as possible. TODO
 ## TLS in Kubernetes
 
 ## TLS in Kubernetes - Certificate Creation
