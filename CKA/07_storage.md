@@ -176,3 +176,19 @@ spec:
     requests:
       storage: 500Mi
 ```
+
+Create a new Storage Class called delayed-volume-sc that makes use of the below specs:
+
+* provisioner: kubernetes.io/no-provisioner
+* volumeBindingMode: WaitForFirstConsumer
+
+Solution manifest file to create a storage class delayed-volume-sc as follows:
+```yaml
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: delayed-volume-sc
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+```
