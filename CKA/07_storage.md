@@ -141,3 +141,38 @@ spec:
 
 The same is true for ReplicaSets or Deployments. Add this to the pod template section of a Deployment on ReplicaSet.
 
+## Storage Classes
+
+Every time an application requires storage, we have to first manually provision the disk and then create a persistent volume definition file using the same name as that of the disk we created. This is called static provisioning volumes!
+
+It would\ve been nice if volume gets provisioned automatically when the application requires it. 
+
+With storage classes we can define a provisioner such as google storage, that can automatically provision storage on google cloud and attach that to pods when the claim is made, that's called dynamic provisioning of volumes. 
+
+The manifest file for google cloud looks like as follows:
+
+```yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: google-storage
+provisioner: kubernetes.io/gce-pd
+```
+
+With these we no longer need a persistent volume, because the persistent volume gets automatically created when the storage class is created.
+
+For the PVC to use the storage class we have to specify the storage class name in the PVC definition:
+
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: my-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: google-storage
+  resources:
+    requests:
+      storage: 500Mi
+```
