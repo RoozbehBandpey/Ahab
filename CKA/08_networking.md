@@ -46,3 +46,28 @@ cat /proc/sys/net/ipv4/ip_forward
 1
 ```
 
+## DNS on Linux
+
+DNS name resolution is handled via a DNS server, the host will bee pointed to the server to look up the DNS names. Every host has a DNS configuration file at `etc/resolve.conf` with an entry into it specifying the address of the DNS server. 
+
+```bash
+cat /etc/resolve.conf
+
+nameserver 192.168.1.100
+```
+
+Once this is set up across all hosts, every time that a name comes up that host does not know about it, it'll look it up from the DNS server.
+
+the local  `etc/hosts` file has priority over the DNS server, meaning  if we have the same name in the host file and DNS server the file in the `etc/hosts` file is taken into account. 
+
+The order is defined in `etc/nsswitch.conf` and can  be changed
+
+```bash
+cat /etc/nsswitch.conf
+
+...
+hosts:      files   dns
+...
+```
+
+### Core DNS
