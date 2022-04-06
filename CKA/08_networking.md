@@ -190,5 +190,4 @@ Whenever a container is created, docker creates a network namespace for it. To l
 
 ## Container Networking Interface (CNI)
 
-
-
+The CNI is set of standards that defines how programs should be developed to solve the networking challenges, in a container runtime environment. The program is referred to as a plugin, in this case the `bridge` is a plugin for CNI. CNI defines a set of responsibilities for container runtimes and pliugins. For container runtime CNI specifies that it is responsible for creating a namespace for each container.  
