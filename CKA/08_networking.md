@@ -81,3 +81,114 @@ Run the executable to start a DNS server. It by default listens on port `53`, wh
 Now we haven’t specified the IP to hostname mappings. For that you need to provide some configurations. There are multiple ways to do that. We will look at one. First we put all of the entries into the DNS servers `/etc/hosts` file.
 
 And then we configure CoreDNS to use that file. CoreDNS loads it’s configuration from a file named Corefile. Here is a simple configuration that instructs CoreDNS to fetch the IP to hostname mappings from the file /etc/hosts. When the DNS server is run, it now picks the Ips and names from the /etc/hosts file on the server.
+
+
+## Network Namespaces
+
+Network namespaces are used by containers like docker to implement network isolation. Containers are separated from underlying host with namespaces. This can be seen when we list processes from within a container or as a root user on the host:
+
+```bash
+ps aux
+```
+When it comes to networking the host has its own interfaces when connects to LAN. as well as route tables. When we create a container on the host, the container will have its  own network namespace therefore it has no visibility to the networking components of the host. Within the network namespace a container can have its own virtual interface, routing and  ARP table. 
+
+To  create a new network namespace run:
+
+```bash
+ip netns add red
+```
+
+To list the network namespaces run:
+
+```bash
+ip netns
+
+red
+```
+
+To list the interfaces on the host
+```bash
+ip link
+```
+To list the interfaces on the `red` container:
+
+```bash
+ip netns exec red ip link
+```
+or
+```bash
+ip -n red link
+```
+
+To view the ARP table inside the container:
+
+```bash
+ip netns exec red arp
+```
+To view the routing table inside the container:
+
+```bash
+ip netns exec red route
+```
+
+To establish connectivity between namespaces themselves, just like how we would connect two physical machines together using a cable  to an ethernet interface, we can connect two namespaces using a virtual ethernet pair or a virtual cable. It is often refer to as a pipe.
+
+To create the cable run the:
+
+```bash
+ip link add veth-red type veth peer name veth-blue
+```
+Next we have  to attach each  interface to the appropriate namespace:
+
+```bash
+ip link set veth-red netns red
+```
+```bash
+ip link set veth-blue netns blue
+```
+Then we can assign ip addresses to each of these namespaces
+```bash
+ip  -n red addr  192.168.15.1 dev veth-red
+```
+```bash
+ip  -n blue addr  192.168.15.2 dev veth-blue
+```
+Then we bring up each interfaces
+
+```bash
+ip -n red link set veth-red up
+```
+```bash
+ip -n blue link set veth-blue up
+```
+
+For testing try to ping the ip of the blue from the red namespace
+
+```bash
+ip netns exec red ping 192.168.15.2
+```
+
+If we have various namespaces we have create  a virtual network inside the host, to create a virtual switch we can use `Linux Bridge` or `Open vSwitch` 
+
+With `Linux Bridge` we have to first add a new interface to the host with thee type set tto `bridge`:
+
+```bash
+ip link add v-net-0 type bridge
+```
+
+## Networking in Docker
+
+A docker host (a server  with docker installed on it) has an ethernet interface `eth0` that connects to the LAN. When you run a container you have different networking options to choose from `docker run --network none nginx`
+
+* `none`: The docker container is not attached to any network, the container cannot reach  the outside world and no one from outside world can reach the container. 
+* `host`: The container is attached to the host network, if you deploy an application on the port `80` of  the container then the container is reachable on the port `80` of the host without any additional port mapping. If we try to run another instance of the container that listens on the same port, it won't work as they share the host networking.
+* `bridge`: An internal private network get created which the containers and docker host attach to it. Each device connecting to this bridge get their own private IP address. 
+
+When docker is installed on a host, it'll create a virtual private network called `bridge` you can see this when you run `docker network ls` command. On the host the network is created by the name `docker0` you can see this in the output of `ip link` command.
+
+Whenever a container is created, docker creates a network namespace for it. To list the namespaces run `ip netns` 
+
+## Container Networking Interface (CNI)
+
+
+
