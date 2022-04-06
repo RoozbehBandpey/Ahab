@@ -191,3 +191,14 @@ Whenever a container is created, docker creates a network namespace for it. To l
 ## Container Networking Interface (CNI)
 
 The CNI is set of standards that defines how programs should be developed to solve the networking challenges, in a container runtime environment. The program is referred to as a plugin, in this case the `bridge` is a plugin for CNI. CNI defines a set of responsibilities for container runtimes and pliugins. For container runtime CNI specifies that it is responsible for creating a namespace for each container.  
+
+
+## Cluster Networking
+
+The kubernetes cluster consist of master and worker nodes, each node must have at least one network interface connected to the private network. Each interface must have an address configured. The host must have a unique hostname set as well as a unique mac address. 
+
+There are some ports that need to be opened as well, The master should accept connections on the `6443` for the api-server, The kubelet on master and worker nodes listen on port `10250` the kube-scheduler requires the `10251`, the kube-controller-manager requires the `10252`.
+
+The worker nodes exposes services for external access on ports `30000` to `32767`
+
+The ETCD server is on its own port `2379`
