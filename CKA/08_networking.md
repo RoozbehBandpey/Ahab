@@ -202,3 +202,17 @@ There are some ports that need to be opened as well, The master should accept co
 The worker nodes exposes services for external access on ports `30000` to `32767`
 
 The ETCD server is on its own port `2379`
+
+
+## Pod Networking
+
+Kubernetes expects every pod to get its own unique IP address. Every pod should be able to reach every other pod within the same node using IP addresses. Every pod should be able to reach every other pod on other nodes as well. 
+
+There are many networking solution out there that implement this model. 
+
+## CNI in Kubernetes
+
+The CNI plugin must be invoked by components within kubernetes responsible for creating containers, because that component must invoke the appropriate network plugin after the container is created. The CNI plugin is configured within kubelet service within each node in the cluster. If you look at the kubelet service file `kubelet.service` you'll see an option set to CNI `--network-plugin=cni` You can also view this option in kubelet service `ps aux | grep kubelet`.
+
+## WeaveWorks
+
