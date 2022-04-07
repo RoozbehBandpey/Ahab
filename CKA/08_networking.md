@@ -216,3 +216,20 @@ The CNI plugin must be invoked by components within kubernetes responsible for c
 
 ## WeaveWorks
 
+## IP Address Management - Weave
+
+CNI says it is the responsibility of the CNI plugin (the network solution provider) to take care of assigning IPs to the containers. 
+
+Kubernetes does not care how we assign IPs, we just need to make sure there's no duplicate IPs
+
+An easy way to do it is to store the list of IPs in a file, and make sure we have the necessary code in our script to manage this file properly. This file will be placed on each host and manages the IP of the pods on each node. 
+
+CNI comes with two built-in plugins which we can outsource this task to.
+* `DHCP`
+* `host-local`
+
+We have to invoke this plugin in our script,  the CNI specification file has a section called `IPAM` which specify the type of plugin to be used. `cat /etc/cni/net.d/net-script.conf`
+
+This details can be red from our script, to use the right plugin instead of hardcoding it. 
+
+Weave by default allocate the IP range `10.32.0.0/12` for the entire network. 
