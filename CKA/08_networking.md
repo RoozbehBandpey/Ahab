@@ -233,3 +233,37 @@ We have to invoke this plugin in our script,  the CNI specification file has a s
 This details can be red from our script, to use the right plugin instead of hardcoding it. 
 
 Weave by default allocate the IP range `10.32.0.0/12` for the entire network. 
+
+## Service Networking
+
+In practice you'd rarely configure pods to connect to each other, if you want a pod to access another pod you would use a service. 
+
+In order to make orange pod accessible to the blue pod, we have to make an orange service. The orange service gets an IP address and a name assign to it, the blue pod can now access orange pod through orange service's IP or its name. 
+
+When a service is created it is accessible from all pods in the cluster, irrespective of what nodes the pods are on. 
+
+A clusterIP service is only accessible from within the cluster. It's useful for services such as databases. 
+
+A nodePort service is accessible from outside of the cluster, It's useful for services such as web applications. It works just like clusterIP but in addition it exposes the application on all nodes in the cluster.
+
+Kubelet is responsible for creating pods on each node, kubelet watches the changes in the cluster through the kube api-server. After creating pods it will invoke the CNI plugin to configure networking for that pod. Kube-proxy watches the changes in the cluster through the kube api-server and every time a new service is to be created, kube-proxy gets into action. Unlike pods, services are not limited to nodes they are a cluster-wide concept. 
+
+When we create a service object in kubernetes, it is assigned an IP address from a predefined range, the kube-proxy gets that IP address, and create forwarding rules on each node in the cluster. Saying any traffic coming to this IP should go to the IP of the pod.  Whenever a service is created or deleted, the kube-proxy creates or deletes these rules. 
+
+
+kube-proxy supports different ways such as `userspace` where it listens on a port for each service and proxies the connection to a pod. `ipvs` rules, or more familiar option is `iptables`. 
+
+The proxy mode can be set while configuring kube-proxy service.
+
+```bash
+kube-proxy --proxy-mode [userspace | iptables | ipvs]
+```
+The default is `iptables` 
+
+You can see the rules created by kube proxy in the IP table NAT table output. 
+
+```bash
+iptables -L -t nat | grep <service-name>
+```
+
+ 
