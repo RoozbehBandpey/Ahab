@@ -279,7 +279,11 @@ If the web service was in a separate namespace called `apps` then to refer to it
 curl http://web-service.apps
 ```
 
-For each namespace we would have a subdomain, all the services are group together in another subdomain called `svc`. Finally all services and pods are grouped together into a root domain for the cluster  which is set to `cluster.local` by default. So the FQDN for the service becomes `http://web-service.apps.cluster.local` that is how services are resolved within the cluster. 
+For each namespace we would have a subdomain, all the services are group together in another subdomain called `svc`. Finally all services and pods are grouped together into a root domain for the cluster  which is set to `cluster.local` by default. So the FQDN for the service becomes `http://web-service.apps.svc.cluster.local` that is how services are resolved within the cluster. 
 
-The FQDN for pods are not created by default, but we can enable that explicitly.
+The FQDN for pods are not created by default, but we can enable that explicitly. For each pod kubernetes generates a name by replacing the dots with dashes. Name space will remain the same, the type will be set to `pod` and the root domain will also stay the same. For example `http://10-244-2-5.apps.pod.cluster.local`
+
+## Core DNS
+
+
 
