@@ -266,4 +266,20 @@ You can see the rules created by kube proxy in the IP table NAT table output.
 iptables -L -t nat | grep <service-name>
 ```
 
- 
+## DNS
+
+In kubernetes each node has a nodename and IP address  assign to it, these are probably registered in a DNS server in the organization.
+
+We focus on DNS resolution within the cluster, kubernetes deploys a builtin DNS server by default when you set up a cluster. 
+
+Imagine we have two pods and one service, test and web pod, to make the web pod accessible to the test pod we make a service. It gets its own IP. Whenever a service is created, kubernetes DNS server creates a record for the service, it maps the service name to its IP address. So within the cluster, any pod can reach this service using its service name. 
+
+If the web service was in a separate namespace called `apps` then to refer to it form the default namespace we would have to say `web-service.apps`
+```bash
+curl http://web-service.apps
+```
+
+For each namespace we would have a subdomain, all the services are group together in another subdomain called `svc`. Finally all services and pods are grouped together into a root domain for the cluster  which is set to `cluster.local` by default. So the FQDN for the service becomes `http://web-service.apps.cluster.local` that is how services are resolved within the cluster. 
+
+The FQDN for pods are not created by default, but we can enable that explicitly.
+
