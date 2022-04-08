@@ -285,5 +285,41 @@ The FQDN for pods are not created by default, but we can enable that explicitly.
 
 ## Core DNS
 
+An easy way to make two pods resolve each other is to add an entry into each of their `etc/hosts` file. On the first pod we add the second pod and vice versa.
+
+This is not a suitable solution if we have thousands of pods being created and deleted. 
+
+A better solution is to move these entries into a central DNS server, then point these pods into the DNS server by adding a entry into their `ect/resolve.conf` file specifying the the `nameserver` is at the IP address of the DNS server. Every time a new pod is created we  add a record into the DNS server for that pod so that other pods can access the new pod. And we configure the `enc/resolve.conf` file so the new pods can resolve other pods into the cluster.
+
+Kubernetes creates an entry in the DNS server by generating a pod name with replacing the dots in the IP of the pod with dashes. After `v1.12` the recommended DNS is CoreDNS.
+
+The CoreDNS is deployed as a pod in the kube-system namespace, they are actually deployed as two pods for redundancy as part of a replicaset. CoreDNS requires a configuration file `etc/coredns/CoreFile` within this file we have a number of plugins configured for `health`, `metrics`, etc., the plugin that makes CoreDNS works with kubernetes is called `kubernetes`. `cluster.local` is mentioned there so every record in kubernetes fall under it. 
+
+The `pods insecure` will enable pod name resolution by dash conversion. 
+
+This file is also passed to pods as a `ConfigMap` object 
+
+```bash
+kubectl get configmap -n kube-system
+
+coredns
+```
+
+For the pods to point to the DNS server, they can point to CoreDNS service,  the service is name `kube-dns` by default, the IP address of this service is configured as `nameserver` on pods. The DNS configuration on pods are done by kubernetes automatically, specifically by `kubelet` if we look at the config file of the kubelet we will see the IP of the DNS server in it:
+
+```bash
+cat /var/lib/kubelet/config.yaml
+
+...
+clusterDNS:
+  - 10.96.0.10
+clusterDomain: cluster.local
+```
+
+You can get the FQDN of the services or pods by running
+```bash
+host <service-name>
+```
+
 
 
