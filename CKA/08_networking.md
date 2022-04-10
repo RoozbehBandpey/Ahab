@@ -481,3 +481,8 @@ spec:
             port:
               number: 80
 ```
+
+n k8s version 1.20+ we can create an Ingress resource from the imperative way like this:-
+```bash
+kubectl create ingress <ingress-name> --rule="host/path=service:port"
+```
