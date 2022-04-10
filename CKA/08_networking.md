@@ -322,4 +322,162 @@ host <service-name>
 ```
 
 
+## Ingress
 
+Imagine we're deploying an application that has a online selling service, say at `online-store.come` we build the application as a docker image and deploy it as a pod within a deployment in kubernetes. The application needs a database so we deploy mysql as a pod and create a service as `ClusterIP` called `mysql-service` to make the application accessible to the outside world, we create another service this time of type `NodePort` lets say at port `38080` the users can now access the application at `http://<node-ip>:38080` whenever traffic increases, we increase the number of replicas of the pod to handle the additional load, and the service takes care of splitting the traffic between pods. 
+
+There are many more things involved in addition to splitting the traffic between the pods. For example we do not want that users to type in IP address every time. So we configure our DNS server to point to the IP of the nodes. To take care of the high-number port we bring an additional later between our DNS server and the cluster like a `proxy-server` that proxies the requests from port `80` to port `38080` on the nodes, then we point the DNS to the proxy server. Now users can simply access the `online-store.com`.  This is when our application is hosted on-prem.
+
+If the application was hosted on a public cloud, instead of creating a service of type `NodePort` we could create a `LoadBalancer` in that case kubernetes would do everything just like the node port but in addition it would send a request to the cloud provider to provision a load balancer. On receiving the request the cloud provider will automatically deploy a load balancer configured to route traffic on the service ports on all the nodes. The load balancer has an external IP that can be provided to users to access the application. Then we point the DNS server to this IP. 
+
+Now let's imagine we have additional service in our business, we want the users to be able to access the new service by going to `online-store.come/<new-service>` we would like to make the old application accessible at `online-store.come/<old-service>` The developers have developed the new application as a completely standalone application and it has nothing to do with the old one. We deploy the new application as a separate deployment within the cluster. We create a service as type `LoadBalancer` and kubernetes provisions port `38282` for this service and also provisions a network load balancer on the cloud, the new load balancer has a new IP.
+
+In order to direct traffic to each od these load balancers based on the URL that the user types in, we need yet another proxy or load balancer that can redirect the traffic. Every time we introduce a new service we have to reconfigure the load balancer. Finally we also need to enable SSL for our applications so users can access the application using the HTTPS. This can be configure at many levels, either application level or proxy,load balancer etc., Ideally we'd like to configure this in one place with minimal maintenance. This becomes easily cumbersome to configure and it would be very nice to manage that within the kubernetes cluster, and have all that configurations as just another kubernetes configuration file. That's where ingress comes in.
+
+
+Ingress helps your users access your application using a single externally accessible URL, hat you can configure to route to different services within your cluster based on the URL path. At the same time, implement SSL security as well. 
+
+Think of ingress as a layer 7 load balancer builtin to the kubernetes cluster, that can be configured using native kubernetes primitives just like any other object in kubernetes. 
+
+Even with ingress we still need to expose it to make it accessible outside of the cluster, so we still have to publish it as node port or with a cloud native load balance, but that is just a one-time configuration. In the future we apply all the load balancing, URL based routing, SSL etc., on the ingress controller. 
+
+
+Ingress controller is principally a reverse proxy like `Nginx`, `HAPROXY` or `Traefik` with set of rules to configure the ingress. The solution we deploy is called ingress controller and the rules are called ingress resources. A kubernetes cluster does not come with ingress controller by default. 
+
+To deploy a `nginx` ingress controller we start with a deployment definition file:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Deployment
+metadata:
+  name: nginx-ingress-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: nginx-ingress
+    template:
+      metadata:
+        labels:
+          name: nginx-ingress
+      spec:
+        containers:
+          - name: nginx-ingress-controller
+            image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.21.0
+        args:
+          - /nginx-ingress-controller
+        env:
+          - name: POD_NAME
+            valueFrom: 
+              fieldRef:
+                filedPath: metadata.name
+          - name: POD_NAMESPACE
+            valueFrom: 
+              fieldRef:
+                filedPath: metadata.namespace
+        ports:
+          - name: http
+            containerPort: 80
+          - name: https
+            containerPort: 443
+```
+
+This a special build of nginx specifically to be used as ingress controller.
+
+Nginx has specific set of configurations such as `err-log-path`, `keep-alive` and `ssl-protocols` for these we must create a config map and pass them in.
+
+We must also create two environment variables to carry pod's name and namespace that is deployed to. The nginx service requires this to read the configuration data from within the pod. 
+
+
+We then need a service to expose the ingress controller to the external world, so we create a service of type `NodePort`
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-ingress
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+    name: http
+  - port: 443
+    targetPort: 443
+    protocol: TCP
+    name: https
+  selector:
+    name: nginx-ingress
+```
+
+The ingress controllers have additional intelligence builtin to them to monitor kubernetes cluster for ingress resources and configure the underlying nginx server when something is changed. But for ingress controller to do this it requires a service account with the right set of permissions. For that we create a service account with the correct roles and rolebindings.
+
+Next we have to create ingress resources. An ingress resource is a set of rules applied on ingress controller.  We can configure it to say simply route all incoming traffic to a specific application, or route traffic to a different application based on a URL, the configuration is as follows:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-<service-name>
+spec:
+  backend:
+    serviceName: <service-name>
+    servicePort: 80
+```
+After creation we can view the resource by
+
+```bash
+kubectl get ingress
+```
+
+To create rules we start with a similar definition file, for instance the rules for routing traffic based on URL path is as follows:
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-<service-name>
+spec:
+  rules:
+  - http: 
+    paths:
+    pathType: prefix
+    - path: /<new-service>
+      backend:
+        service:
+          name: <new-service-name>
+          port:
+            number: 80
+    - path: /<old-service>
+      backend:
+        serviceName: <old-service-name>
+        servicePort: 80
+```
+
+The default backend is when user tries to reach a URL that is not specified in rules.
+
+If we want to route users based on domain names we have to create separate rules:
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-<service-name>
+spec:
+  rules:
+  - host: <new-service>.online-store.com
+    http:
+      paths:
+        backend:
+          service:
+            name: <new-service-name>
+            port:
+              number: 80
+  - host: <old-service>.online-store.com
+    http:
+      paths:
+        backend:
+          service:
+            name: <new-service-name>
+            port:
+              number: 80
+```
