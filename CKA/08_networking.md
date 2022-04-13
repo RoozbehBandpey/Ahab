@@ -347,7 +347,7 @@ Ingress controller is principally a reverse proxy like `Nginx`, `HAPROXY` or `Tr
 To deploy a `nginx` ingress controller we start with a deployment definition file:
 
 ```yaml
-apiVersion: networking.k8s.io/v1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-ingress-controller
