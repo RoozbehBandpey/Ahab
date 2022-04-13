@@ -1,2 +1,37 @@
 # Troubleshooting
 
+Let's look at a two pod application a web and a database server. The database pod hosts a database application and hosts the web server through a database service. 
+
+Users report some issue with accessing the application, first we check if the web application is accessible via the IP of the node port
+
+```bash
+curl http://web-service-ip:node-port
+```
+
+Next we check the web application's service, did it discovered the endpoint for the web pod?
+
+```bash
+kubectl describe service web-service
+```
+If it did not, compare the selectors on the service with the ones on the pod
+
+Next we check the pod itself and make sure it is in the running state. The state of the pod as well as the number of restarts can give and idea if application is running or getting restarted.
+
+```bash
+kubectl get pods
+```
+Check the events related to the pod using the describe command
+
+```bash
+kubectl describe pod <pod-name>
+```
+
+We can get the logs with
+```bash
+kubectl logs <object-name>
+```
+
+If the pods are restarting due to a failure then the logs in the current version of the pod may not reflect why it failed the last time. So we either have to view these logs with `-f` option to wait for pods to wait, or with `--previous` option to view the logs of the previous version of the pods.
+
+The we go deeper to check the status of the db service and db pod itself
+
