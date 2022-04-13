@@ -35,3 +35,49 @@ If the pods are restarting due to a failure then the logs in the current version
 
 The we go deeper to check the status of the db service and db pod itself
 
+## Control plane failures
+
+Start by checking the status of the nodes in  the cluster
+
+```bash
+kubectl get nodes
+```
+Then check the status of the pods running on the cluster
+```bash
+kubectl get pods
+```
+
+If the kubeadm was used then we have control plane components as pods in kube-system namespace
+
+```bash
+kubectl get pods -n kube-system
+```
+If control plane components were deployed as services, then check the status of kubernetes services:
+On master node:
+```bash
+service kube-apiserver status
+```
+```bash
+service kube-controller-manager status
+```
+```bash
+service kube-scheduler status
+```
+and on worker nodes
+```bash
+service kubelet status
+```
+```bash
+service kube-proxy status
+```
+
+Next check the logs of control plane components, in case of kubeadm
+
+```bash
+kubectl logs kube-apiserver-master -n kube-system
+```
+In case of services, view the service logs using the host's logging solution:
+
+```bash
+sudo journalctl -u kube-apiserver
+```
