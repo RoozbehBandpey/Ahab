@@ -81,3 +81,45 @@ In case of services, view the service logs using the host's logging solution:
 ```bash
 sudo journalctl -u kube-apiserver
 ```
+
+## Worker Node Failure
+
+Start by checking the state of the nodes in the cluster
+
+```bash
+kubectl get nodes
+```
+
+If the nodes are reported as not ready, check the details of the nodes using
+
+```bash
+kubectl describe node <node name>
+```
+
+Check for possible CPu, memory and disk space on the nodes
+
+```bash
+top
+```
+```bash
+df -h
+```
+
+Check the status  of the kubelet
+
+```bash
+service kubelet status
+```
+
+Check kubelet logs for possible issues
+```bash
+sudo journalctl -u kubelet
+```
+
+Check kubelet certificates, make sure they are not expired and they are part of a right group
+
+```bash
+openssl x509 -in /var/lib/kubelet/worker-1.crt -text 
+```
+
+Make sure that certificates are issued by the right CA
